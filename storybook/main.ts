@@ -125,6 +125,8 @@ const config: StorybookConfig = {
 	},
 	viteFinal: async ( viteConfig ) => {
 		return mergeConfig( viteConfig, {
+			// Storybook's Vite builder defaults this to the repo root (process.cwd()), but we want this workspace to be the root for isolated module resolution.
+			root: import.meta.dirname,
 			plugins: [
 				dsTokenFallbacksJs(),
 				react() as PluginOption,
@@ -245,6 +247,17 @@ const config: StorybookConfig = {
 				'globalThis.SCRIPT_DEBUG': JSON.stringify(
 					NODE_ENV === 'development'
 				),
+			},
+			resolve: {
+				/*
+				 * Resolve Storybook packages from this workspace.
+				 */
+				dedupe: [
+					'storybook',
+					'@storybook/addon-a11y',
+					'@storybook/addon-docs',
+					'@storybook/icons',
+				],
 			},
 			css: {
 				postcss: {
