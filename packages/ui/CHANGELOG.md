@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### New Features
+
+-   Add a `Menu` component. ([#79560](https://github.com/WordPress/gutenberg/pull/79560))
+
+### Enhancements
+
+-   `Menu`: Add shortcut display and accessibility metadata support. ([#79560](https://github.com/WordPress/gutenberg/pull/79560))
+
 ## 0.20.0 (2026-08-12)
 
 ### Breaking Changes
@@ -60,7 +68,6 @@
 
 -   Add `Checkbox` form primitive ([#80039](https://github.com/WordPress/gutenberg/pull/80039)).
 -   Add `Skeleton` component ([#79671](https://github.com/WordPress/gutenberg/pull/79671)).
--   Add a `Menu` component. ([#79560](https://github.com/WordPress/gutenberg/pull/79560))
 
 ### Enhancements
 
