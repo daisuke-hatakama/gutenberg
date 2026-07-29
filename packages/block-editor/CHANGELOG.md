@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### New Features
+
+-   `URLInput`: Add an opt-in `closeSuggestionsOnNavigateOutside` prop that closes the suggestions list when focus moves outside the field, dismisses it on Escape without also closing an enclosing popover, and only opens the list while the field has focus ([#80879](https://github.com/WordPress/gutenberg/pull/80879)).
+
 ### Bug Fixes
 
 -   `DimensionsTool`: Reflect aspect ratio and scale values that are updated from outside the component, such as by undo or `updateBlockAttributes`. The scale control no longer displays a stale value, and an aspect ratio that is written differently to its preset, e.g. `1/1` rather than `1`, is displayed as that preset instead of as "Original" ([#80747](https://github.com/WordPress/gutenberg/pull/80747)).
