@@ -10,6 +10,7 @@
 
 -   Icon: Apply only padding to the inner SVG in the editor, so margin is no longer applied twice compared to the front end ([#81292](https://github.com/WordPress/gutenberg/pull/81292)).
 -   Term Description: Apply the term description display filters when rendering with term context inside a Terms Query loop, so multi-paragraph descriptions keep their paragraphs and match the taxonomy archive rendering ([#81290](https://github.com/WordPress/gutenberg/pull/81290)).
+-   Post Template: Pass an explicit default layout to the inner blocks of the Post Template and Term Template blocks, so the movers, inserters, and child controls of the template's blocks no longer follow the grid used to arrange the post/term items ([#81120](https://github.com/WordPress/gutenberg/pull/81120)).
 
 ## 10.4.0 (2026-08-12)
 
