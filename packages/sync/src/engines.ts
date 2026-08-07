@@ -95,6 +95,26 @@ export const HTTP_POLLING_TRANSPORT_SLUG = 'http-polling';
 let engineAdapters: Record< string, SyncEngineAdapter > | null = null;
 
 /**
+ * Engine adapters registered imperatively through the private API
+ * `registerSyncEngine` (used by the engines plugin). Kept separate from the
+ * `sync.engines` filter so plugins can register from module side effects.
+ */
+const registeredEngineAdapters: SyncEngineAdapter[] = [];
+
+/**
+ * Registers a sync engine adapter (private API). Later registration of a slug
+ * wins. Invalidates the adapter cache so the next resolution sees it.
+ *
+ * @param adapter Engine adapter.
+ */
+export function registerSyncEngine( adapter: SyncEngineAdapter ): void {
+	if ( isEngineAdapter( adapter ) ) {
+		registeredEngineAdapters.push( adapter );
+		engineAdapters = null;
+	}
+}
+
+/**
  * The built-in engine adapters.
  *
  * @return Default adapters, keyed by slug.
@@ -144,12 +164,13 @@ export function getEngineAdapters(): Record< string, SyncEngineAdapter > {
 	}
 
 	/**
-	 * Filter the available sync engine adapters.
+	 * Filter the available sync engine adapters. The base list is the
+	 * built-ins plus any registered imperatively via `registerSyncEngine`.
 	 */
-	const filtered: unknown = applyFilters(
-		'sync.engines',
-		getDefaultEngineAdapters()
-	);
+	const filtered: unknown = applyFilters( 'sync.engines', [
+		...getDefaultEngineAdapters(),
+		...registeredEngineAdapters,
+	] );
 
 	engineAdapters = {};
 	if ( Array.isArray( filtered ) ) {
@@ -226,4 +247,5 @@ export function resolveEngineAdapter(): SyncEngineAdapter | null {
  */
 export function resetEngineAdaptersForTesting(): void {
 	engineAdapters = null;
+	registeredEngineAdapters.length = 0;
 }

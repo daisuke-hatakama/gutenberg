@@ -8,7 +8,8 @@ import {
 	LOCAL_UNDO_IGNORED_ORIGIN,
 } from './config';
 import { ConnectionErrorCode } from './errors';
-import { resolveEngineAdapter } from './engines';
+import { registerSyncEngine, resolveEngineAdapter } from './engines';
+import { registerSyncTransport } from './providers';
 import { lock } from './lock-unlock';
 import { createSyncManager } from './manager';
 import { pollingManager } from './providers/http-polling/polling-manager';
@@ -25,6 +26,10 @@ lock( privateApis, {
 	 */
 	createSyncManager,
 	resolveEngineAdapter,
+	// The engines plugin registers its adapters and transports through
+	// these (see the Gutenberg Sync Engines plugin).
+	registerSyncEngine,
+	registerSyncTransport,
 	Delta,
 	CRDT_DOC_META_PERSISTENCE_KEY,
 	CRDT_RECORD_MAP_KEY,

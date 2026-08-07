@@ -34,6 +34,32 @@ export interface TransportRegistration {
 let providerCreators: ProviderCreator[] | null = null;
 
 /**
+ * Transports registered imperatively through the private API
+ * `registerSyncTransport` (used by the engines plugin), merged with the
+ * built-ins and any `sync.transports` filter additions during negotiation.
+ */
+const registeredTransports: TransportRegistration[] = [];
+
+/**
+ * Registers a client transport (private API). Invalidates the negotiated
+ * provider cache so the next resolution can pick it.
+ *
+ * @param {TransportRegistration} transport Transport registration.
+ */
+export function registerSyncTransport(
+	transport: TransportRegistration
+): void {
+	if (
+		transport &&
+		'string' === typeof transport.slug &&
+		'function' === typeof transport.create
+	) {
+		registeredTransports.push( transport );
+		providerCreators = null;
+	}
+}
+
+/**
  * The built-in client transports, in fallback preference order. Adding a
  * transport is a matter of dropping a sibling folder and appending its
  * registration here (or via the `sync.transports` filter) — the negotiation
@@ -67,10 +93,10 @@ function getDefaultTransports(): TransportRegistration[] {
  * @return {TransportRegistration[]} Registered transports.
  */
 function getRegisteredTransports(): TransportRegistration[] {
-	const registered: unknown = applyFilters(
-		'sync.transports',
-		getDefaultTransports()
-	);
+	const registered: unknown = applyFilters( 'sync.transports', [
+		...getDefaultTransports(),
+		...registeredTransports,
+	] );
 	if ( ! Array.isArray( registered ) ) {
 		return getDefaultTransports();
 	}
@@ -180,4 +206,5 @@ export function getProviderCreators(): ProviderCreator[] {
  */
 export function resetProviderCreatorsForTesting(): void {
 	providerCreators = null;
+	registeredTransports.length = 0;
 }
