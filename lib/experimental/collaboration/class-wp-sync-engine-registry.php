@@ -25,7 +25,16 @@ if ( ! class_exists( 'WP_Sync_Engine_Registry' ) ) {
 		 * @since 7.2.0
 		 * @var string
 		 */
-		const DEFAULT_ENGINE = WP_Yjs_Relay_Engine::SLUG;
+		/**
+		 * Conventional default engine slug (used when the `wp_sync_engine`
+		 * option is unset). Only takes effect if a plugin has registered an
+		 * engine by this slug; otherwise the registry stays empty and RTC is
+		 * disabled.
+		 *
+		 * @since 7.2.0
+		 * @var string
+		 */
+		const DEFAULT_ENGINE = 'yjs-relay';
 
 		/**
 		 * Registered engines by slug.
@@ -44,19 +53,20 @@ if ( ! class_exists( 'WP_Sync_Engine_Registry' ) ) {
 		 * @param WP_Sync_Storage $storage Storage backend engines should use.
 		 */
 		public function __construct( WP_Sync_Storage $storage ) {
-			$this->register( new WP_Yjs_Relay_Engine( $storage ) );
-			$this->register( new WP_Intent_Log_Engine( $storage ) );
-
 			/**
 			 * Filters the registered sync engines.
 			 *
-			 * Plugins may register additional engines by returning an array
-			 * with extra WP_Sync_Engine instances. Keys are ignored; engines
-			 * are indexed by their slug.
+			 * The framework ships NO engines of its own: a plugin (e.g.
+			 * Gutenberg Sync Engines) supplies them here. With none registered
+			 * the registry is empty, so real-time collaboration finds no
+			 * engine to negotiate and degrades to the classic post lock.
+			 *
+			 * Return an array of WP_Sync_Engine instances. Keys are ignored;
+			 * engines are indexed by their slug.
 			 *
 			 * @since 7.2.0
 			 *
-			 * @param WP_Sync_Engine[] $engines Additional engines to register.
+			 * @param WP_Sync_Engine[] $engines Engines to register.
 			 * @param WP_Sync_Storage  $storage Storage backend engines should use.
 			 */
 			$extra_engines = apply_filters( 'wp_sync_engines', array(), $storage );
@@ -122,23 +132,40 @@ if ( ! class_exists( 'WP_Sync_Engine_Registry' ) ) {
 			 */
 			$slug = apply_filters( 'wp_sync_engine_for_room', $slug, $room );
 
-			if ( ! isset( $this->engines[ $slug ] ) ) {
-				return self::DEFAULT_ENGINE;
+			if ( isset( $this->engines[ $slug ] ) ) {
+				return $slug;
 			}
 
-			return $slug;
+			// Configured engine not registered: fall back to any registered
+			// engine so a misconfiguration still works, or '' when the
+			// registry is empty (no engine plugin active → RTC disabled).
+			$slugs = array_keys( $this->engines );
+			return $slugs[0] ?? '';
 		}
 
 		/**
-		 * Returns the engine instance for a room.
+		 * The slugs of all registered engines.
+		 *
+		 * @since 7.2.0
+		 *
+		 * @return string[] Registered engine slugs.
+		 */
+		public function get_engine_slugs(): array {
+			return array_keys( $this->engines );
+		}
+
+		/**
+		 * Returns the engine instance for a room, or null when no engine is
+		 * registered (no engine plugin active).
 		 *
 		 * @since 7.2.0
 		 *
 		 * @param string $room Room identifier.
-		 * @return WP_Sync_Engine Engine instance.
+		 * @return WP_Sync_Engine|null Engine instance, or null.
 		 */
-		public function get_engine_for_room( string $room ): WP_Sync_Engine {
-			return $this->engines[ $this->get_engine_slug_for_room( $room ) ];
+		public function get_engine_for_room( string $room ): ?WP_Sync_Engine {
+			$slug = $this->get_engine_slug_for_room( $room );
+			return '' !== $slug ? $this->engines[ $slug ] : null;
 		}
 
 		/**

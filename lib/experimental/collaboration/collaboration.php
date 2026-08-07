@@ -10,23 +10,14 @@ if ( ! class_exists( 'WP_Sync_Post_Meta_Storage' ) ) {
 	require_once __DIR__ . '/interface-wp-sync-storage.php';
 	require_once __DIR__ . '/class-wp-sync-post-meta-storage.php';
 	require_once __DIR__ . '/interface-wp-sync-engine.php';
-	require_once __DIR__ . '/class-wp-yjs-relay-engine.php';
-	require_once __DIR__ . '/class-wp-intent-log-document.php';
-	require_once __DIR__ . '/class-wp-intent-log-planner.php';
-	require_once __DIR__ . '/class-wp-intent-log-rich-text.php';
-	require_once __DIR__ . '/class-wp-intent-log-engine.php';
 	require_once __DIR__ . '/class-wp-sync-engine-registry.php';
 	require_once __DIR__ . '/transports/interface-wp-sync-transport.php';
-	require_once __DIR__ . '/transports/class-wp-http-polling-sync-server.php';
-	require_once __DIR__ . '/transports/class-wp-http-long-polling-sync-server.php';
-	require_once __DIR__ . '/transports/websocket/class-wp-websocket-token-controller.php';
-	require_once __DIR__ . '/transports/websocket/class-wp-websocket-connection.php';
-	require_once __DIR__ . '/transports/websocket/class-wp-websocket-sync-server.php';
-	require_once __DIR__ . '/transports/websocket/class-wp-websocket-sync-transport.php';
 	require_once __DIR__ . '/transports/class-wp-sync-transport-registry.php';
-	if ( defined( 'WP_CLI' ) && WP_CLI ) {
-		require_once __DIR__ . '/transports/websocket/class-wp-sync-server-cli-command.php';
-	}
+	// Engine and transport IMPLEMENTATIONS ship in a plugin (e.g. Gutenberg
+	// Sync Engines) and register through the wp_sync_engines /
+	// wp_sync_transports filters. The framework loads only the contracts and
+	// registries; without an engine plugin the registries stay empty and
+	// real-time collaboration degrades to the classic post lock.
 }
 require_once __DIR__ . '/class-wp-sync-save-server.php';
 
@@ -84,7 +75,9 @@ if ( ! function_exists( 'wp_get_collaboration_transport' ) ) {
 	 * @return string Configured transport slug.
 	 */
 	function wp_get_collaboration_transport(): string {
-		$transport = WP_HTTP_Polling_Sync_Server::TRANSPORT_SLUG;
+		// Conventional default; only takes effect if a plugin registered a
+		// transport by this slug.
+		$transport = 'http-polling';
 		if ( defined( 'WP_COLLABORATION_TRANSPORT' ) && is_string( WP_COLLABORATION_TRANSPORT ) && '' !== WP_COLLABORATION_TRANSPORT ) {
 			$transport = WP_COLLABORATION_TRANSPORT;
 		} else {
@@ -176,35 +169,6 @@ if ( ! function_exists( 'wp_collaboration_register_meta' ) ) {
 		);
 	}
 	add_action( 'init', 'gutenberg_rest_api_crdt_post_meta' );
-}
-
-if ( ! function_exists( 'gutenberg_enqueue_sync_id_stamper' ) ) {
-	/**
-	 * Enqueues the block identity stamper for intent-log sites.
-	 *
-	 * The stamper fills `metadata.syncId` for blocks that lack one and
-	 * re-mints duplicates (split/duplication copy metadata wholesale),
-	 * directly in the editor store — making block identity DURABLE: it
-	 * rides the block comment delimiters into saved content and arrives
-	 * with every captured tree instead of being re-inferred per keystroke.
-	 */
-	function gutenberg_enqueue_sync_id_stamper() {
-		if ( ! wp_is_collaboration_enabled() ) {
-			return;
-		}
-		$registry = new WP_Sync_Engine_Registry( new WP_Sync_Post_Meta_Storage() );
-		if ( WP_Intent_Log_Engine::SLUG !== $registry->get_engine_slug_for_room( '' ) ) {
-			return;
-		}
-		wp_enqueue_script(
-			'gutenberg-collaboration-sync-id',
-			gutenberg_url( 'lib/experimental/collaboration/sync-id.js' ),
-			array( 'wp-data' ),
-			filemtime( __DIR__ . '/sync-id.js' ),
-			true
-		);
-	}
-	add_action( 'enqueue_block_editor_assets', 'gutenberg_enqueue_sync_id_stamper' );
 }
 
 if ( ! function_exists( 'gutenberg_register_sync_engine_setting' ) ) {
@@ -442,9 +406,12 @@ function gutenberg_inject_real_time_collaboration_setting() {
 	$engine             = $registry->get_engine_for_room( '' );
 	$transport_registry = wp_get_collaboration_transport_registry();
 	$active_transport   = $transport_registry->get_transport( $transport_registry->get_active_slug() );
+	// With no engine plugin active, announce no engine and no transports;
+	// the client then has nothing to negotiate and falls back to the post
+	// lock (RTC disabled).
 	$sync               = array(
-		'engine'            => $engine->get_slug(),
-		'engineProtocol'    => $engine->get_protocol_version(),
+		'engine'            => $engine ? $engine->get_slug() : '',
+		'engineProtocol'    => $engine ? $engine->get_protocol_version() : 0,
 		// Announced active FIRST; the client picks the first slug it can
 		// provide (see the single config value `wp_get_collaboration_transport`).
 		'transports'        => $transport_registry->get_announced_slugs(),
@@ -459,12 +426,13 @@ function gutenberg_inject_real_time_collaboration_setting() {
 		// Informational half of the intent-log actor id; the server stamps
 		// the authoritative value from the authenticated request.
 		'window._wpCollaborationUserId = ' . wp_json_encode( get_current_user_id() ) . ';' .
-		// The socket URL, so the websocket provider knows where to connect
-		// when it is the negotiated transport (empty otherwise).
-		'window._wpCollaborationWebSocketUrl = ' . wp_json_encode(
-			class_exists( 'WP_WebSocket_Sync_Transport' ) && in_array( 'websocket', $transport_registry->get_announced_slugs(), true )
-				? WP_WebSocket_Sync_Transport::get_socket_url()
-				: ''
+		/*
+		 * Transport-specific connection metadata (e.g. a WebSocket socket
+		 * URL) is supplied by the transport's plugin through this filter,
+		 * so the framework carries no transport-specific knowledge.
+		 */
+		'window._wpCollaborationTransportConfig = ' . wp_json_encode(
+			(object) apply_filters( 'wp_sync_transport_client_config', array(), $sync['transports'] )
 		) . ';' .
 		// UI hint only — restore/approval is enforced at ingest per the
 		// authoring user's capability regardless of what the client shows.

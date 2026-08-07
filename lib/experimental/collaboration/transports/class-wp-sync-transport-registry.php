@@ -39,24 +39,19 @@ if ( ! class_exists( 'WP_Sync_Transport_Registry' ) ) {
 		 *                                         transports drive rooms through.
 		 */
 		public function __construct( WP_Sync_Storage $storage, WP_Sync_Engine_Registry $engines ) {
-			$this->register( new WP_HTTP_Polling_Sync_Server( $storage, $engines ) );
-
-			if ( class_exists( 'WP_HTTP_Long_Polling_Sync_Server' ) ) {
-				$this->register( new WP_HTTP_Long_Polling_Sync_Server( $storage, $engines ) );
-			}
-			if ( class_exists( 'WP_WebSocket_Sync_Transport' ) ) {
-				$this->register( new WP_WebSocket_Sync_Transport( $storage, $engines ) );
-			}
-
 			/**
 			 * Filters the registered sync transports.
 			 *
-			 * Plugins may register additional transports by returning an
-			 * array of WP_Sync_Transport instances.
+			 * The framework ships NO transports of its own: a plugin (e.g.
+			 * Gutenberg Sync Engines) supplies them here. With none registered
+			 * a session has no transport to negotiate and degrades to the
+			 * classic post lock.
+			 *
+			 * Return an array of WP_Sync_Transport instances.
 			 *
 			 * @since 7.2.0
 			 *
-			 * @param WP_Sync_Transport[]     $transports Additional transports.
+			 * @param WP_Sync_Transport[]     $transports Transports to register.
 			 * @param WP_Sync_Storage         $storage    Storage backend.
 			 * @param WP_Sync_Engine_Registry $engines    Engine registry.
 			 */
@@ -106,19 +101,21 @@ if ( ! class_exists( 'WP_Sync_Transport_Registry' ) ) {
 		}
 
 		/**
-		 * The active transport slug from site config, guaranteed to be a
-		 * registered transport (falls back to HTTP polling).
+		 * The active transport slug: the configured one when registered,
+		 * otherwise any registered transport, or '' when the registry is
+		 * empty (no transport plugin active → RTC disabled).
 		 *
 		 * @since 7.2.0
 		 *
-		 * @return string Active transport slug.
+		 * @return string Active transport slug, or ''.
 		 */
 		public function get_active_slug(): string {
 			$configured = wp_get_collaboration_transport();
 			if ( isset( $this->transports[ $configured ] ) ) {
 				return $configured;
 			}
-			return WP_HTTP_Polling_Sync_Server::TRANSPORT_SLUG;
+			$slugs = array_keys( $this->transports );
+			return $slugs[0] ?? '';
 		}
 
 		/**
@@ -133,7 +130,10 @@ if ( ! class_exists( 'WP_Sync_Transport_Registry' ) ) {
 		 */
 		public function get_announced_slugs(): array {
 			$active = $this->get_active_slug();
-			$slugs  = array( $active );
+			if ( '' === $active ) {
+				return array();
+			}
+			$slugs = array( $active );
 			foreach ( array_keys( $this->transports ) as $slug ) {
 				if ( $slug !== $active ) {
 					$slugs[] = $slug;
