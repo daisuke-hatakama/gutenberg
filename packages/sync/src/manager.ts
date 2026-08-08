@@ -1,23 +1,17 @@
 /**
  * External dependencies
  */
-import type * as Y from 'yjs';
 import type { Awareness } from 'y-protocols/awareness';
 
 /**
  * Internal dependencies
  */
-import {
-	CRDT_STATE_MAP_KEY,
-	CRDT_STATE_MAP_SAVED_AT_KEY as SAVED_AT_KEY,
-} from './config';
-import type { EngineEntity } from './engines/engine';
-import { createYjsEngine, createYjsSessionCodec } from './engines/yjs-relay';
+import type { EngineCollection, EngineEntity } from './engines/engine';
+import { createYjsEngine } from './engines/yjs-relay';
 import { logPerformanceTiming, passThru } from './performance';
 import { getProviderCreators } from './providers';
 import type {
 	CollectionHandlers,
-	CRDTDoc,
 	EntityID,
 	ObjectID,
 	ObjectData,
@@ -31,14 +25,13 @@ import type {
 	SyncUndoManager,
 } from './types';
 import { createUndoManager } from './undo-manager';
-import { createYjsDoc, initializeYjsDoc, markEntityAsSaved } from './utils';
 
 interface CollectionState {
 	awareness?: Awareness;
+	core: EngineCollection;
 	handlers: CollectionHandlers;
 	syncConfig: SyncConfig;
 	unload: () => void;
-	ydoc: CRDTDoc;
 }
 
 interface EntityState {
@@ -312,12 +305,9 @@ export function createSyncManager( debug = false ): SyncManager {
 
 		log( 'loadCollection', 'loading', entityId );
 
-		const ydoc = createYjsDoc( { collection: true, objectType } );
-		const stateMap = ydoc.getMap( CRDT_STATE_MAP_KEY );
-		const now = Date.now();
+		const core = engine.createCollection( { syncConfig, objectType } );
+		const awareness = core.awareness;
 
-		// Track whether observers have been attached to the maps.
-		let hasObserversAttached = false;
 		// Track whether unload ran (possibly while we were awaiting provider
 		// creation), so the post-await code can destroy any providers that
 		// were created after unload and bail out.
@@ -329,38 +319,9 @@ export function createSyncManager( debug = false ): SyncManager {
 			isCollectionUnloaded = true;
 			providerResults?.forEach( ( result ) => result.destroy() );
 			handlers.onStatusChange( null );
-			if ( hasObserversAttached ) {
-				stateMap.unobserve( onStateMapUpdate );
-			}
-			ydoc.destroy();
+			core.destroy();
 			collectionStates.delete( objectType );
 		};
-
-		const onStateMapUpdate = (
-			event: Y.YMapEvent< unknown >,
-			transaction: Y.Transaction
-		) => {
-			if ( transaction.local ) {
-				return;
-			}
-
-			event.keysChanged.forEach( ( key ) => {
-				switch ( key ) {
-					case SAVED_AT_KEY:
-						const newValue = stateMap.get( SAVED_AT_KEY );
-						if ( 'number' === typeof newValue && newValue > now ) {
-							// Another peer has performed a user-facing save that
-							// may affect the collection. Refetch it so that we
-							// obtain the updated records.
-							void handlers.refetchRecords().catch( () => {} );
-						}
-						break;
-				}
-			} );
-		};
-
-		// If the sync config supports awareness, create it.
-		const awareness = syncConfig.createAwareness?.( ydoc );
 
 		// Declare with let before using it in unload closure.
 		// eslint-disable-next-line prefer-const
@@ -368,24 +329,24 @@ export function createSyncManager( debug = false ): SyncManager {
 
 		const collectionState: CollectionState = {
 			awareness,
+			core,
 			handlers,
 			syncConfig,
 			unload,
-			ydoc,
 		};
 
 		collectionStates.set( objectType, collectionState );
 
 		// Create providers for the given collection. Each provider receives
-		// its own engine session codec closed over the Yjs document and
-		// awareness, so transports never handle Yjs objects directly.
+		// its own engine session codec, so transports never handle engine
+		// internals directly.
 		log( 'loadCollection', 'connecting', entityId );
 		providerResults = await Promise.all(
 			providerCreators.map( async ( create ) => {
 				const provider = await create( {
 					objectType,
 					objectId: null,
-					session: createYjsSessionCodec( { awareness, doc: ydoc } ),
+					session: core.createSession(),
 				} );
 
 				// Attach status listener after provider creation.
@@ -408,12 +369,11 @@ export function createSyncManager( debug = false ): SyncManager {
 			return;
 		}
 
-		// Attach observers.
-		stateMap.observe( onStateMapUpdate );
-		hasObserversAttached = true;
-
-		// Initialize the Yjs document with the necessary CRDT state.
-		initializeYjsDoc( ydoc );
+		// Attach peer-save observation, then initialize the document.
+		core.observe( {
+			onPeerSave: () => void handlers.refetchRecords().catch( () => {} ),
+		} );
+		core.initialize();
 	}
 
 	/**
@@ -514,9 +474,7 @@ export function createSyncManager( debug = false ): SyncManager {
 		}
 
 		if ( collectionState && isSave ) {
-			collectionState.ydoc.transact( () => {
-				markEntityAsSaved( collectionState.ydoc );
-			}, origin );
+			collectionState.core.markSaved( origin );
 		}
 	}
 

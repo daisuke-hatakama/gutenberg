@@ -106,9 +106,37 @@ export interface EngineEntity {
 }
 
 /**
- * A session-scoped sync engine: its identity plus a factory of per-entity
- * cores. The generic manager is constructed with one resolved engine (the one
- * the server announced) and asks it for an {@link EngineEntity} per room.
+ * One engine's document core for a synced COLLECTION (an object type synced as
+ * a whole, keyed by object type rather than a single object id). Collections
+ * carry no per-record document, undo, or persisted-doc hydration — only a
+ * shared awareness/save channel — so this is a lighter core than
+ * {@link EngineEntity}.
+ */
+export interface EngineCollection {
+	/** Awareness for this collection, if the engine's sync config created one. */
+	readonly awareness?: Awareness;
+
+	/** Mints a transport-facing session codec over this collection's state. */
+	createSession: () => EngineSessionCodec;
+
+	/** Initializes the document (collections have no persisted-doc hydration). */
+	initialize: () => void;
+
+	/** Attaches peer-save observation. Called once, before initialization. */
+	observe: ( observers: { onPeerSave: () => void } ) => void;
+
+	/** Records a user-facing save on the collection. */
+	markSaved: ( origin: string ) => void;
+
+	/** Detaches observers and destroys the underlying document. */
+	destroy: () => void;
+}
+
+/**
+ * A session-scoped sync engine: its identity plus factories of per-entity and
+ * per-collection cores. The generic manager is constructed with one resolved
+ * engine (the one the server announced) and asks it for an
+ * {@link EngineEntity}/{@link EngineCollection} per room.
  */
 export interface SyncEngine {
 	readonly slug: string;
@@ -118,4 +146,8 @@ export interface SyncEngine {
 		objectType: ObjectType;
 		objectId: ObjectID;
 	} ) => EngineEntity;
+	createCollection: ( context: {
+		syncConfig: SyncConfig;
+		objectType: ObjectType;
+	} ) => EngineCollection;
 }

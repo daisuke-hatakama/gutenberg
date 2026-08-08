@@ -20,7 +20,7 @@ import {
 	markEntityAsSaved,
 	serializeCrdtDoc,
 } from '../../utils';
-import type { EngineEntity, SyncEngine } from '../engine';
+import type { EngineCollection, EngineEntity, SyncEngine } from '../engine';
 import {
 	createYjsSessionCodec,
 	YJS_RELAY_ENGINE_PROTOCOL,
@@ -203,6 +203,67 @@ export function createYjsEngine(): SyncEngine {
 						if ( onStateMapUpdate ) {
 							stateMap.unobserve( onStateMapUpdate );
 						}
+					}
+					ydoc.destroy();
+				},
+			};
+		},
+
+		createCollection( { syncConfig, objectType } ): EngineCollection {
+			const ydoc = createYjsDoc( { collection: true, objectType } );
+			const stateMap = ydoc.getMap( CRDT_STATE_MAP_KEY );
+			const now = Date.now();
+
+			// If the sync config supports awareness, create it.
+			const awareness = syncConfig.createAwareness?.( ydoc );
+
+			let observersAttached = false;
+			let onStateMapUpdate:
+				| ( (
+						event: Y.YMapEvent< unknown >,
+						transaction: Y.Transaction
+				  ) => void )
+				| undefined;
+
+			return {
+				awareness,
+
+				createSession: () =>
+					createYjsSessionCodec( { awareness, doc: ydoc } ),
+
+				initialize: () => initializeYjsDoc( ydoc ),
+
+				observe( observers ) {
+					onStateMapUpdate = ( event, transaction ) => {
+						if ( transaction.local ) {
+							return;
+						}
+						event.keysChanged.forEach( ( key ) => {
+							if ( SAVED_AT_KEY === key ) {
+								const newValue = stateMap.get( SAVED_AT_KEY );
+								if (
+									'number' === typeof newValue &&
+									newValue > now
+								) {
+									// A peer performed a user-facing save that
+									// may affect the collection.
+									observers.onPeerSave();
+								}
+							}
+						} );
+					};
+
+					stateMap.observe( onStateMapUpdate );
+					observersAttached = true;
+				},
+
+				markSaved( origin ) {
+					ydoc.transact( () => markEntityAsSaved( ydoc ), origin );
+				},
+
+				destroy() {
+					if ( observersAttached && onStateMapUpdate ) {
+						stateMap.unobserve( onStateMapUpdate );
 					}
 					ydoc.destroy();
 				},
