@@ -33,6 +33,7 @@ interface CollectionState {
 	awareness?: Awareness;
 	core: EngineCollection;
 	handlers: CollectionHandlers;
+	providers: ProviderCreatorResult[];
 	syncConfig: SyncConfig;
 	unload: () => void;
 }
@@ -43,6 +44,7 @@ interface EntityState {
 	handlers: RecordHandlers;
 	objectId: ObjectID;
 	objectType: ObjectType;
+	providers: ProviderCreatorResult[];
 	syncConfig: SyncConfig;
 	unload: () => void;
 }
@@ -229,6 +231,7 @@ export function createSyncManager(
 			handlers,
 			objectId,
 			objectType,
+			providers: [],
 			syncConfig,
 			unload,
 		};
@@ -262,6 +265,9 @@ export function createSyncManager(
 			providerResults.forEach( ( result ) => result.destroy() );
 			return;
 		}
+
+		// Expose the live providers so the manager's retry() can reach them.
+		entityState.providers = providerResults;
 
 		// Seed the document from the persisted record. Observers are attached
 		// AFTER hydration so it does not dispatch a redundant editRecord whose
@@ -337,6 +343,7 @@ export function createSyncManager(
 			awareness,
 			core,
 			handlers,
+			providers: [],
 			syncConfig,
 			unload,
 		};
@@ -374,6 +381,9 @@ export function createSyncManager(
 			providerResults.forEach( ( result ) => result.destroy() );
 			return;
 		}
+
+		// Expose the live providers so the manager's retry() can reach them.
+		collectionState.providers = providerResults;
 
 		// Attach peer-save observation, then initialize the document.
 		core.observe( {
@@ -414,6 +424,25 @@ export function createSyncManager(
 			collectionState.unload();
 		}
 		collectionStates.clear();
+	}
+
+	/**
+	 * Retry the active connection(s) after a connection error. Best-effort:
+	 * asks every live provider across all loaded entities and collections to
+	 * retry (see `ProviderCreatorResult.retry`); transports without an explicit
+	 * retry are skipped. Transport-agnostic — the manager does not know or care
+	 * which transport is active.
+	 */
+	function retry(): void {
+		log( 'retry', 'retrying all providers', 'all' );
+		for ( const [ , entityState ] of entityStates ) {
+			entityState.providers.forEach( ( provider ) => provider.retry?.() );
+		}
+		for ( const [ , collectionState ] of collectionStates ) {
+			collectionState.providers.forEach(
+				( provider ) => provider.retry?.()
+			);
+		}
 	}
 
 	/**
@@ -681,5 +710,6 @@ export function createSyncManager(
 		unload: debugWrap( unloadEntity ),
 		unloadAll: debugWrap( unloadAll ),
 		update: debugWrap( updateOrDefer ),
+		retry: debugWrap( retry ),
 	};
 }

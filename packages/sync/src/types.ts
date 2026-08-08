@@ -75,6 +75,12 @@ export type ProviderOn = < K extends keyof ProviderEventMap >(
 export interface ProviderCreatorResult {
 	destroy: () => void;
 	on: ProviderOn;
+	/**
+	 * Best-effort: reconnect / poll immediately after a connection error.
+	 * Called by the manager's `retry()` (driven by the editor's connection-
+	 * error UI). Optional — transports without an explicit retry are skipped.
+	 */
+	retry?: () => void;
 }
 
 /**
@@ -333,6 +339,14 @@ export interface SyncManager {
 	) => void;
 	unload: ( objectType: ObjectType, objectId: ObjectID ) => void;
 	unloadAll: () => void;
+	/**
+	 * Retries the active connection(s) after a connection error — the
+	 * transport-agnostic replacement for reaching into a specific transport.
+	 * Best-effort: it asks every live provider to retry (see
+	 * `ProviderCreatorResult.retry`). Wired to the editor's connection-error
+	 * modal through `core-data`'s `retrySyncConnection`.
+	 */
+	retry?: () => void;
 	update: (
 		objectType: ObjectType,
 		objectId: ObjectID | null,

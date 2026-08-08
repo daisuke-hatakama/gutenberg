@@ -19,7 +19,6 @@ const {
 	LOCAL_EDITOR_ORIGIN,
 	LOCAL_UNDO_IGNORED_ORIGIN,
 	resolveEngineAdapter,
-	retrySyncConnection,
 } = unlock( syncPrivateApis );
 
 export {
@@ -29,7 +28,6 @@ export {
 	CRDT_RECORD_MAP_KEY,
 	LOCAL_EDITOR_ORIGIN,
 	LOCAL_UNDO_IGNORED_ORIGIN,
-	retrySyncConnection,
 };
 
 /**
@@ -95,6 +93,20 @@ export function isSyncEngineUnavailable(): boolean {
  */
 export function hasSyncManager(): boolean {
 	return Boolean( syncManager );
+}
+
+/**
+ * Retry the active sync connection after a connection error (wired to the
+ * editor's connection-error modal). Transport-agnostic: it delegates to the
+ * active manager, which asks its live providers to retry — no reaching into a
+ * specific transport. A no-op when no manager exists (collaboration disabled or
+ * the announced engine is unavailable).
+ */
+export function retrySyncConnection(): void {
+	if ( ! hasSyncManager() ) {
+		return;
+	}
+	getSyncManager()?.retry?.();
 }
 
 /**
