@@ -13,11 +13,6 @@ import {
 	YJS_RELAY_ENGINE_PROTOCOL,
 	type YjsSessionOptions,
 } from './engines/yjs-relay';
-import { createIntentLogManager } from './engines/intent-log-manager';
-import {
-	INTENT_LOG_ENGINE_SLUG,
-	INTENT_LOG_ENGINE_PROTOCOL,
-} from './engines/intent-log-session';
 import { createSyncManager } from './manager';
 import type { SyncManager } from './types';
 
@@ -78,14 +73,11 @@ export interface AnnouncedSync {
 /*
  * Engine identity constants (slug + protocol version, matching the PHP
  * engine classes) are defined in each engine's session module so codecs can
- * stamp their own identity, and re-exported here as the public surface.
+ * stamp their own identity, and re-exported here as the public surface. Only
+ * the built-in Yjs relay is defined here; plugin engines (e.g. intent-log)
+ * carry their own identity constants and register through registerSyncEngine.
  */
-export {
-	YJS_RELAY_ENGINE_SLUG,
-	YJS_RELAY_ENGINE_PROTOCOL,
-	INTENT_LOG_ENGINE_SLUG,
-	INTENT_LOG_ENGINE_PROTOCOL,
-};
+export { YJS_RELAY_ENGINE_SLUG, YJS_RELAY_ENGINE_PROTOCOL };
 
 /**
  * Transport slug of the built-in HTTP short-polling provider.
@@ -120,6 +112,10 @@ export function registerSyncEngine( adapter: SyncEngineAdapter ): void {
  * @return Default adapters, keyed by slug.
  */
 function getDefaultEngineAdapters(): SyncEngineAdapter[] {
+	// The intent-log engine now lives in the Gutenberg Sync Engines plugin,
+	// which registers it through `registerSyncEngine`. Only the incumbent
+	// Yjs relay remains built in; it is inert without a plugin transport and
+	// a server that announces it, so RTC stays disabled without the plugin.
 	return [
 		{
 			slug: YJS_RELAY_ENGINE_SLUG,
@@ -127,11 +123,6 @@ function getDefaultEngineAdapters(): SyncEngineAdapter[] {
 			createManager: createSyncManager,
 			createSessionCodec: ( options?: unknown ) =>
 				createYjsSessionCodec( options as YjsSessionOptions ),
-		},
-		{
-			slug: INTENT_LOG_ENGINE_SLUG,
-			protocolVersion: INTENT_LOG_ENGINE_PROTOCOL,
-			createManager: createIntentLogManager,
 		},
 	];
 }

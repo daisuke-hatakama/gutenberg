@@ -10,7 +10,6 @@ import {
 	jest,
 } from '@jest/globals';
 import { type SyncPayload, type SyncResponse, type SyncUpdate } from '../types';
-import { createIntentLogSession } from '../../../engines/intent-log-session';
 
 // Mock all external dependencies before imports.
 jest.mock( '@wordpress/hooks', () => ( {
@@ -1324,91 +1323,6 @@ describe( 'polling-manager', () => {
 			 ).rooms[ 0 ].updates;
 			expect( retryUpdates ).toEqual( failedUpdates );
 			expect( session.createCompactionUpdate ).not.toHaveBeenCalled();
-		} );
-
-		it( 'REGRESSION: the real intent-log session survives a poll error without losing queued intents or killing polling', async () => {
-			// The review found the recovery path called a compaction the
-			// intent-log codec throws on, AFTER clearing the queue: one
-			// transient network error while typing lost the queued intents
-			// and permanently stopped polling (unhandled rejection).
-			// The awareness map must include OUR clientId (7): the first-poll
-			// connection-limit check counts us as an extra client otherwise.
-			const responseWithSnapshot = {
-				rooms: [
-					{
-						room: 'test-room',
-						end_cursor: 1,
-						awareness: { 7: {}, 2: {} },
-						updates: [
-							{
-								data: JSON.stringify( { doc: { root: [] } } ),
-								type: 'snapshot',
-							},
-						],
-					},
-				],
-			};
-			mockPostSyncUpdate.mockResolvedValueOnce( responseWithSnapshot );
-
-			const session = createIntentLogSession( {
-				userId: 1,
-				clientId: 7,
-			} );
-			pollingManager.registerRoom( {
-				room: 'test-room',
-				session,
-				log: jest.fn(),
-				onStatusChange: jest.fn(),
-			} );
-
-			await jest.advanceTimersByTimeAsync( 0 );
-			expect( mockPostSyncUpdate ).toHaveBeenCalledTimes( 1 );
-			expect( session.isInitialized() ).toBe( true );
-
-			// The user types: a real intent enters the queue.
-			const intent = session.author( 'set_property', {
-				name: 'title',
-				value: 'typed offline',
-				observedVersion: 0,
-			} );
-
-			// Network error on the poll carrying it (1000ms cadence with
-			// collaborators).
-			mockPostSyncUpdate.mockRejectedValueOnce( new Error( 'timeout' ) );
-			await jest.advanceTimersByTimeAsync( 1000 );
-			expect( mockPostSyncUpdate ).toHaveBeenCalledTimes( 2 );
-
-			// The retry re-sends the SAME intent (idempotent server ingest),
-			// and polling is alive.
-			const emptyOk = {
-				rooms: [
-					{
-						room: 'test-room',
-						end_cursor: 2,
-						awareness: { 7: {}, 2: {} },
-						updates: [],
-					},
-				],
-			};
-			mockPostSyncUpdate.mockResolvedValueOnce( emptyOk );
-			await jest.advanceTimersByTimeAsync( 1000 );
-			expect( mockPostSyncUpdate ).toHaveBeenCalledTimes( 3 );
-			const retryUpdates = (
-				mockPostSyncUpdate.mock.calls[ 2 ][ 0 ] as {
-					rooms: Array< {
-						updates: Array< { data: string; type: string } >;
-					} >;
-				}
-			 ).rooms[ 0 ].updates;
-			expect( retryUpdates ).toHaveLength( 1 );
-			expect( JSON.parse( retryUpdates[ 0 ].data ).intentId ).toBe(
-				intent.intentId
-			);
-
-			// Polling continues on the normal cadence afterwards.
-			mockPostSyncUpdate.mockResolvedValueOnce( emptyOk );
-			await jest.advanceTimersByTimeAsync( 1000 );
-			expect( mockPostSyncUpdate ).toHaveBeenCalledTimes( 4 );
 		} );
 
 		it( 'does not queue a compaction for rooms with no outgoing updates', async () => {
