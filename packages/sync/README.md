@@ -28,6 +28,18 @@ In general, awareness for core entity types is implemented by the `core-data` pa
 
 Undocumented declaration.
 
+### AwarenessState
+
+Undocumented declaration.
+
+### EngineDisposition
+
+Undocumented declaration.
+
+### EngineLocalUpdateListener
+
+Undocumented declaration.
+
 ### EngineLocalUpdateListener
 
 Undocumented declaration.
@@ -36,7 +48,19 @@ Undocumented declaration.
 
 Undocumented declaration.
 
+### EngineSessionCodec
+
+Undocumented declaration.
+
 ### EngineUpdate
+
+Undocumented declaration.
+
+### EngineUpdate
+
+Undocumented declaration.
+
+### LocalAwarenessState
 
 Undocumented declaration.
 

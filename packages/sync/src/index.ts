@@ -60,3 +60,14 @@ export { Awareness } from 'y-protocols/awareness';
 export { privateApis } from './private-apis';
 
 export type * from './types';
+
+// The engine/transport SEAM types, so engine and transport plugins can type
+// their adapters, session codecs, and providers against the framework.
+export type {
+	LocalAwarenessState,
+	AwarenessState,
+	EngineUpdate,
+	EngineDisposition,
+	EngineLocalUpdateListener,
+	EngineSessionCodec,
+} from './engines/session';
