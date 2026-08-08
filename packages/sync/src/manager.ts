@@ -6,8 +6,11 @@ import type { Awareness } from 'y-protocols/awareness';
 /**
  * Internal dependencies
  */
-import type { EngineCollection, EngineEntity } from './engines/engine';
-import { createYjsEngine } from './engines/yjs-relay';
+import type {
+	EngineCollection,
+	EngineEntity,
+	SyncEngine,
+} from './engines/engine';
 import { logPerformanceTiming, passThru } from './performance';
 import { getProviderCreators } from './providers';
 import type {
@@ -59,17 +62,20 @@ function getEntityId(
 
 /**
  * The sync manager orchestrates the lifecycle of syncing entity records. It
- * creates Yjs documents, connects to providers, creates awareness instances,
- * and coordinates with the `core-data` store.
+ * connects to providers, wires their session codecs, and coordinates with the
+ * `core-data` store. It is engine-neutral: the injected {@link SyncEngine}
+ * owns the document model (the Yjs relay, the intent log, …); the manager owns
+ * negotiation, provider wiring, lifecycle, and the deferred-update policy.
  *
- * @param debug Whether to enable performance and debug logging.
+ * @param engine        The engine that owns per-entity/collection document meaning.
+ * @param options       Manager options.
+ * @param options.debug Whether to enable performance and debug logging.
  */
-export function createSyncManager( debug = false ): SyncManager {
+export function createSyncManager(
+	engine: SyncEngine,
+	{ debug = false }: { debug?: boolean } = {}
+): SyncManager {
 	const debugWrap = debug ? logPerformanceTiming : passThru;
-	// The engine that owns per-entity document semantics. Defaulted to the
-	// incumbent Yjs relay so this signature stays source-compatible; a later
-	// step injects the server-negotiated engine here (see PORTING.md).
-	const engine = createYjsEngine();
 	const collectionStates: Map< ObjectType, CollectionState > = new Map();
 	const entityStates: Map< EntityID, EntityState > = new Map();
 

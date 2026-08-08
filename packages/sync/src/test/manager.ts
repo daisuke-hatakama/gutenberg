@@ -18,6 +18,7 @@ import {
  * Internal dependencies
  */
 import { createSyncManager } from '../manager';
+import { createYjsEngine } from '../engines/yjs-relay';
 import {
 	CRDT_RECORD_MAP_KEY,
 	CRDT_STATE_MAP_KEY,
@@ -111,14 +112,14 @@ describe( 'SyncManager', () => {
 
 	describe( 'load', () => {
 		it( 'creates a sync manager with load method', () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			expect( manager ).toHaveProperty( 'load' );
 			expect( typeof manager.load ).toBe( 'function' );
 		} );
 
 		it( 'loads an entity and applies changes to CRDT document', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -136,7 +137,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'creates providers for the entity', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -163,7 +164,7 @@ describe( 'SyncManager', () => {
 		it( 'does not load entity when no providers are available', async () => {
 			mockGetProviderCreators.mockReturnValue( [] );
 
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -180,7 +181,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'does not load entity twice if already loaded', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -206,7 +207,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'loads multiple entities independently', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			const record1 = { id: '123', title: 'Post 1' };
 			const record2 = { id: '456', title: 'Post 2' };
@@ -262,7 +263,7 @@ describe( 'SyncManager', () => {
 				restoreUndoMeta: jest.fn(),
 			};
 
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -313,7 +314,7 @@ describe( 'SyncManager', () => {
 			}
 
 			it( 'applies the current record when no persisted CRDT doc exists', async () => {
-				const manager = createSyncManager();
+				const manager = createSyncManager( createYjsEngine() );
 
 				await manager.load(
 					mockSyncConfig,
@@ -350,7 +351,7 @@ describe( 'SyncManager', () => {
 					),
 				};
 
-				const manager = createSyncManager();
+				const manager = createSyncManager( createYjsEngine() );
 
 				await manager.load(
 					mockSyncConfig,
@@ -389,7 +390,7 @@ describe( 'SyncManager', () => {
 					),
 				};
 
-				const manager = createSyncManager();
+				const manager = createSyncManager( createYjsEngine() );
 
 				await manager.load(
 					mockSyncConfig,
@@ -429,7 +430,7 @@ describe( 'SyncManager', () => {
 
 	describe( 'unload', () => {
 		it( 'unloads an entity and destroys its state', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -445,7 +446,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'does not throw when unloading non-existent entity', () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			expect( () => {
 				manager.unload( 'post', '999' );
@@ -453,7 +454,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'allows reloading after unloading', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -482,7 +483,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'unloads specific entity without affecting others', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -516,7 +517,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'clears the undo manager after unloading all entities', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -553,7 +554,7 @@ describe( 'SyncManager', () => {
 			);
 			mockProviderCreator.mockImplementation( () => providerPromise );
 
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			// Start the load but do not await it. The async function will run up
 			// to the `await Promise.all(...)` and then suspend.
@@ -618,7 +619,7 @@ describe( 'SyncManager', () => {
 				}
 			);
 
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -686,7 +687,7 @@ describe( 'SyncManager', () => {
 				),
 			};
 
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				syncConfig,
@@ -734,7 +735,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'defers local CRDT updates off the hot path when editing alone', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -765,7 +766,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'applies queued solo updates before a synchronous collaborative update', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -817,7 +818,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'does not update when entity is not loaded', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			const changes = { title: 'Updated Title' };
 			manager.update( 'post', '999', changes, 'local-editor' );
@@ -840,7 +841,7 @@ describe( 'SyncManager', () => {
 				}
 			);
 
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -883,7 +884,7 @@ describe( 'SyncManager', () => {
 				}
 			);
 
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -930,7 +931,7 @@ describe( 'SyncManager', () => {
 				}
 			);
 
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -1033,7 +1034,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'fails open for entities that are not loaded', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			expect(
 				manager.getEntitySnapshot( 'post', '456' )
@@ -1046,7 +1047,7 @@ describe( 'SyncManager', () => {
 
 	describe( 'shouldSync', () => {
 		it( 'skips loading entity when shouldSync returns false', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			mockSyncConfig.shouldSync = jest.fn( () => false );
 
@@ -1069,7 +1070,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'loads entity when shouldSync returns true', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			mockSyncConfig.shouldSync = jest.fn( () => true );
 
@@ -1092,7 +1093,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'loads entity when shouldSync is not defined', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			delete mockSyncConfig.shouldSync;
 
@@ -1111,7 +1112,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'skips loading collection when shouldSync returns false', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			mockSyncConfig.shouldSync = jest.fn( () => false );
 
@@ -1134,7 +1135,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'loads collection when shouldSync returns true', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			mockSyncConfig.shouldSync = jest.fn( () => true );
 
@@ -1157,7 +1158,7 @@ describe( 'SyncManager', () => {
 		} );
 
 		it( 'loads collection when shouldSync is not defined', async () => {
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			delete mockSyncConfig.shouldSync;
 
@@ -1187,7 +1188,7 @@ describe( 'SyncManager', () => {
 				}
 			);
 
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -1232,7 +1233,7 @@ describe( 'SyncManager', () => {
 				}
 			);
 
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,
@@ -1272,7 +1273,7 @@ describe( 'SyncManager', () => {
 				}
 			);
 
-			const manager = createSyncManager();
+			const manager = createSyncManager( createYjsEngine() );
 
 			await manager.load(
 				mockSyncConfig,

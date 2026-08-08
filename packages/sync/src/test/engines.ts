@@ -39,10 +39,9 @@ describe( 'sync engine adapters', () => {
 			expect( adapters[ YJS_RELAY_ENGINE_SLUG ].protocolVersion ).toBe(
 				YJS_RELAY_ENGINE_PROTOCOL
 			);
-			// The yjs-relay adapter supplies the transport session codec
-			// factory grown in the provider-narrowing refactor.
+			// The yjs-relay adapter composes the engine-neutral sync manager.
 			expect(
-				typeof adapters[ YJS_RELAY_ENGINE_SLUG ].createSessionCodec
+				typeof adapters[ YJS_RELAY_ENGINE_SLUG ].createManager
 			).toBe( 'function' );
 		} );
 

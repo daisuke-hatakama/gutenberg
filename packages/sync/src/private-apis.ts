@@ -19,6 +19,7 @@ import {
 	registerSyncTransport,
 	resetProviderCreatorsForTesting,
 } from './providers';
+import { createYjsEngine } from './engines/yjs-relay';
 import { lock } from './lock-unlock';
 import { createSyncManager } from './manager';
 import { pollingManager } from './providers/http-polling/polling-manager';
@@ -29,11 +30,17 @@ export const privateApis = {};
 lock( privateApis, {
 	ConnectionErrorCode,
 	/**
-	 * @deprecated Resolve the manager through `resolveEngineAdapter()` so the
-	 *             server-announced engine handshake is honored; direct
-	 *             construction bypasses the engine mismatch check.
+	 * The engine-neutral sync manager shell. Engine plugins compose it with
+	 * their own engine — `createSyncManager( engine, { debug } )` — inside an
+	 * adapter's `createManager`. Prefer `resolveEngineAdapter()` to obtain the
+	 * server-announced manager; constructing one directly bypasses the engine
+	 * mismatch check.
 	 */
 	createSyncManager,
+	// The built-in Yjs relay engine, so an engine plugin's yjs-relay adapter
+	// can compose it with the shared manager until the Yjs stack itself moves
+	// into the plugin (see the Gutenberg Sync Engines plugin's PORTING.md §5).
+	createYjsEngine,
 	resolveEngineAdapter,
 	// The engines plugin registers its adapters and transports through
 	// these, and drives its managers/providers through the shared registry
