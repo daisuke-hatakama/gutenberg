@@ -32,7 +32,19 @@ Undocumented declaration.
 
 Undocumented declaration.
 
+### EngineCollection
+
+Undocumented declaration.
+
 ### EngineDisposition
+
+Undocumented declaration.
+
+### EngineEntity
+
+Undocumented declaration.
+
+### EngineEntityObservers
 
 Undocumented declaration.
 
@@ -71,6 +83,10 @@ Undocumented declaration.
 ### privateApis
 
 Private @wordpress/sync APIs.
+
+### SyncEngine
+
+Undocumented declaration.
 
 ### Y
 

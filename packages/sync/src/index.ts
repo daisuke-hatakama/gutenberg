@@ -71,3 +71,12 @@ export type {
 	EngineLocalUpdateListener,
 	EngineSessionCodec,
 } from './engines/session';
+
+// The engine SPI: an engine plugin implements `SyncEngine` (a factory of
+// per-entity/collection cores) and composes it with `createSyncManager`.
+export type {
+	SyncEngine,
+	EngineEntity,
+	EngineCollection,
+	EngineEntityObservers,
+} from './engines/engine';

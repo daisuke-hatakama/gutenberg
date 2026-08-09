@@ -19,7 +19,6 @@ import {
 	registerSyncTransport,
 	resetProviderCreatorsForTesting,
 } from './providers';
-import { createYjsEngine } from './engines/yjs-relay';
 import { lock } from './lock-unlock';
 import { createSyncManager } from './manager';
 import { default as Delta } from './quill-delta/Delta';
@@ -36,10 +35,6 @@ lock( privateApis, {
 	 * mismatch check.
 	 */
 	createSyncManager,
-	// The built-in Yjs relay engine, so an engine plugin's yjs-relay adapter
-	// can compose it with the shared manager until the Yjs stack itself moves
-	// into the plugin (see the Gutenberg Sync Engines plugin's PORTING.md §5).
-	createYjsEngine,
 	resolveEngineAdapter,
 	// The engines plugin registers its adapters and transports through
 	// these, and drives its managers/providers through the shared registry

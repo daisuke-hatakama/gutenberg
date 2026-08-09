@@ -12,11 +12,7 @@ import { __dangerousOptInToUnstableAPIsOnlyForCoreModules } from '@wordpress/pri
  * Internal dependencies
  */
 import { privateApis } from '../private-apis';
-import {
-	getEngineAdapters,
-	resetEngineAdaptersForTesting,
-	YJS_RELAY_ENGINE_SLUG,
-} from '../engines';
+import { getEngineAdapters, resetEngineAdaptersForTesting } from '../engines';
 import {
 	getDefaultProviderCreators,
 	resetProviderCreatorsForTesting,
@@ -56,8 +52,9 @@ describe( 'sync private APIs (plugin registration surface)', () => {
 		const adapters = getEngineAdapters();
 		expect( adapters[ 'plugin-engine' ] ).toBeDefined();
 		expect( adapters[ 'plugin-engine' ].protocolVersion ).toBe( 2 );
-		// Built-ins still present (defaults are additive for now).
-		expect( adapters[ YJS_RELAY_ENGINE_SLUG ] ).toBeDefined();
+		// The framework ships no built-in engines; only the plugin's registered
+		// adapter is present.
+		expect( Object.keys( adapters ) ).toEqual( [ 'plugin-engine' ] );
 	} );
 
 	it( 'a plugin-registered transport is negotiable', () => {

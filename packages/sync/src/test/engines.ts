@@ -16,16 +16,33 @@ import {
 	getEngineAdapters,
 	resetEngineAdaptersForTesting,
 	resolveEngineAdapter,
-	YJS_RELAY_ENGINE_PROTOCOL,
-	YJS_RELAY_ENGINE_SLUG,
 } from '../engines';
 import {
 	getProviderCreators,
 	resetProviderCreatorsForTesting,
 } from '../providers';
 
+// The framework ships NO engines; they come from a plugin via
+// `registerSyncEngine` (or the `sync.engines` filter). These tests register a
+// minimal stub adapter to exercise the registry and the negotiation.
+const STUB_SLUG = 'stub-engine';
+const STUB_PROTOCOL = 1;
+const STUB_HOOK = 'test/stub-engine';
+
+function registerStubEngine(): void {
+	addFilter( 'sync.engines', STUB_HOOK, ( adapters ) => [
+		...( adapters as unknown[] ),
+		{
+			slug: STUB_SLUG,
+			protocolVersion: STUB_PROTOCOL,
+			createManager: () => ( {} ) as never,
+		},
+	] );
+}
+
 describe( 'sync engine adapters', () => {
 	afterEach( () => {
+		removeFilter( 'sync.engines', STUB_HOOK );
 		resetEngineAdaptersForTesting();
 		resetProviderCreatorsForTesting();
 		delete window._wpCollaborationSync;
@@ -33,21 +50,13 @@ describe( 'sync engine adapters', () => {
 	} );
 
 	describe( 'getEngineAdapters', () => {
-		it( 'registers the yjs-relay adapter by default', () => {
-			const adapters = getEngineAdapters();
-			expect( adapters[ YJS_RELAY_ENGINE_SLUG ] ).toBeDefined();
-			expect( adapters[ YJS_RELAY_ENGINE_SLUG ].protocolVersion ).toBe(
-				YJS_RELAY_ENGINE_PROTOCOL
-			);
-			// The yjs-relay adapter composes the engine-neutral sync manager.
-			expect(
-				typeof adapters[ YJS_RELAY_ENGINE_SLUG ].createManager
-			).toBe( 'function' );
+		it( 'registers no adapters by default (engines come from a plugin)', () => {
+			expect( Object.keys( getEngineAdapters() ) ).toHaveLength( 0 );
 		} );
 
-		it( 'accepts additional adapters via the sync.engines filter and drops malformed ones', () => {
+		it( 'accepts adapters via the sync.engines filter and drops malformed ones', () => {
 			addFilter( 'sync.engines', 'test/add-engine', ( adapters ) => [
-				...adapters,
+				...( adapters as unknown[] ),
 				{
 					slug: 'intent-log',
 					protocolVersion: 1,
@@ -59,7 +68,6 @@ describe( 'sync engine adapters', () => {
 			const adapters = getEngineAdapters();
 			expect( adapters[ 'intent-log' ] ).toBeDefined();
 			expect( adapters[ 'malformed-no-factory' ] ).toBeUndefined();
-			expect( adapters[ YJS_RELAY_ENGINE_SLUG ] ).toBeDefined();
 
 			removeFilter( 'sync.engines', 'test/add-engine' );
 		} );
@@ -71,17 +79,17 @@ describe( 'sync engine adapters', () => {
 		} );
 
 		it( 'returns null for a malformed announcement', () => {
-			window._wpCollaborationSync = { engine: 'yjs-relay' };
+			window._wpCollaborationSync = { engine: STUB_SLUG };
 			expect( getAnnouncedSync() ).toBeNull();
 		} );
 
 		it( 'normalizes a valid announcement', () => {
 			window._wpCollaborationSync = {
-				engine: 'yjs-relay',
+				engine: STUB_SLUG,
 				engineProtocol: 1,
 			};
 			expect( getAnnouncedSync() ).toEqual( {
-				engine: 'yjs-relay',
+				engine: STUB_SLUG,
 				engineProtocol: 1,
 				transports: [],
 				transportProtocol: 1,
@@ -90,21 +98,19 @@ describe( 'sync engine adapters', () => {
 	} );
 
 	describe( 'resolveEngineAdapter', () => {
-		it( 'falls back to yjs-relay when the server announces nothing (pre-handshake server)', () => {
-			const adapter = resolveEngineAdapter();
-			expect( adapter?.slug ).toBe( YJS_RELAY_ENGINE_SLUG );
+		it( 'returns null when the server announces nothing', () => {
+			expect( resolveEngineAdapter() ).toBeNull();
 		} );
 
 		it( 'resolves the announced engine when registered at the right protocol', () => {
+			registerStubEngine();
 			window._wpCollaborationSync = {
-				engine: YJS_RELAY_ENGINE_SLUG,
-				engineProtocol: YJS_RELAY_ENGINE_PROTOCOL,
+				engine: STUB_SLUG,
+				engineProtocol: STUB_PROTOCOL,
 				transports: [ 'http-polling' ],
 				transportProtocol: 1,
 			};
-			expect( resolveEngineAdapter()?.slug ).toBe(
-				YJS_RELAY_ENGINE_SLUG
-			);
+			expect( resolveEngineAdapter()?.slug ).toBe( STUB_SLUG );
 		} );
 
 		it( 'returns null when the announced engine is not registered', () => {
@@ -118,9 +124,10 @@ describe( 'sync engine adapters', () => {
 		} );
 
 		it( 'returns null on an engine protocol version mismatch', () => {
+			registerStubEngine();
 			window._wpCollaborationSync = {
-				engine: YJS_RELAY_ENGINE_SLUG,
-				engineProtocol: YJS_RELAY_ENGINE_PROTOCOL + 1,
+				engine: STUB_SLUG,
+				engineProtocol: STUB_PROTOCOL + 1,
 				transports: [ 'http-polling' ],
 				transportProtocol: 1,
 			};
@@ -132,8 +139,8 @@ describe( 'sync engine adapters', () => {
 		it( 'returns no providers when no announced transport is registered', () => {
 			window._wpCollaborationEnabled = '1';
 			window._wpCollaborationSync = {
-				engine: YJS_RELAY_ENGINE_SLUG,
-				engineProtocol: YJS_RELAY_ENGINE_PROTOCOL,
+				engine: STUB_SLUG,
+				engineProtocol: STUB_PROTOCOL,
 				// A transport this client has no provider for.
 				transports: [ 'carrier-pigeon' ],
 				transportProtocol: 1,
@@ -144,8 +151,8 @@ describe( 'sync engine adapters', () => {
 		it( 'negotiates a registered transport when one is announced', () => {
 			window._wpCollaborationEnabled = '1';
 			window._wpCollaborationSync = {
-				engine: YJS_RELAY_ENGINE_SLUG,
-				engineProtocol: YJS_RELAY_ENGINE_PROTOCOL,
+				engine: STUB_SLUG,
+				engineProtocol: STUB_PROTOCOL,
 				transports: [ 'carrier-pigeon', 'http-polling' ],
 				transportProtocol: 1,
 			};

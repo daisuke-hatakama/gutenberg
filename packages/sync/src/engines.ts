@@ -6,12 +6,6 @@ import { applyFilters } from '@wordpress/hooks';
 /**
  * Internal dependencies
  */
-import {
-	createYjsEngine,
-	YJS_RELAY_ENGINE_SLUG,
-	YJS_RELAY_ENGINE_PROTOCOL,
-} from './engines/yjs-relay';
-import { createSyncManager } from './manager';
 import type { SyncManager } from './types';
 
 /**
@@ -48,7 +42,7 @@ export interface SyncEngineAdapter {
 	/**
 	 * Creates the sync manager implementing this engine. Adapters compose the
 	 * engine-neutral `createSyncManager( engine, { debug } )` with their own
-	 * {@link SyncEngine}; the engine owns the transport-facing session codec, so
+	 * `SyncEngine`; the engine owns the transport-facing session codec, so
 	 * transports only ever receive the engine-generic codec.
 	 */
 	createManager: ( debug?: boolean ) => SyncManager;
@@ -71,8 +65,6 @@ export interface AnnouncedSync {
  * the built-in Yjs relay is defined here; plugin engines (e.g. intent-log)
  * carry their own identity constants and register through registerSyncEngine.
  */
-export { YJS_RELAY_ENGINE_SLUG, YJS_RELAY_ENGINE_PROTOCOL };
-
 /**
  * Transport slug of the built-in HTTP short-polling provider.
  */
@@ -106,18 +98,12 @@ export function registerSyncEngine( adapter: SyncEngineAdapter ): void {
  * @return Default adapters, keyed by slug.
  */
 function getDefaultEngineAdapters(): SyncEngineAdapter[] {
-	// The intent-log engine now lives in the Gutenberg Sync Engines plugin,
-	// which registers it through `registerSyncEngine`. Only the incumbent
-	// Yjs relay remains built in; it is inert without a plugin transport and
-	// a server that announces it, so RTC stays disabled without the plugin.
-	return [
-		{
-			slug: YJS_RELAY_ENGINE_SLUG,
-			protocolVersion: YJS_RELAY_ENGINE_PROTOCOL,
-			createManager: ( debug ) =>
-				createSyncManager( createYjsEngine(), { debug } ),
-		},
-	];
+	// The framework ships NO built-in engines. Both the Yjs relay and the
+	// intent-log engine live in the Gutenberg Sync Engines plugin, which
+	// registers them through `registerSyncEngine`. Without that plugin the
+	// registry is empty and RTC stays disabled (the server announces no engine
+	// and the client resolves none).
+	return [];
 }
 
 /**
@@ -200,24 +186,27 @@ export function getAnnouncedSync(): AnnouncedSync | null {
 /**
  * Resolves the engine adapter for this session from the server announcement.
  *
- * - No announcement (pre-handshake server): the Yjs relay adapter, matching
- *   pre-handshake behavior.
+ * - No announcement (collaboration disabled, or a server with no engine
+ *   registered): null — no engine to speak.
  * - Announced engine registered at the announced protocol version: that
  *   adapter.
  * - Anything else: null — the client must NOT join sync rooms. Callers
  *   surface this as "collaboration unavailable" and WordPress's regular
  *   post locking takes over (the same posture as collaboration disabled).
  *
+ * The framework registers no engines itself; adapters come from an engine
+ * plugin via `registerSyncEngine`. Without one, this always returns null.
+ *
  * @return The adapter to use, or null on engine mismatch.
  */
 export function resolveEngineAdapter(): SyncEngineAdapter | null {
-	const adapters = getEngineAdapters();
 	const announced = getAnnouncedSync();
 
 	if ( ! announced ) {
-		return adapters[ YJS_RELAY_ENGINE_SLUG ] ?? null;
+		return null;
 	}
 
+	const adapters = getEngineAdapters();
 	const adapter = adapters[ announced.engine ];
 	if ( ! adapter || adapter.protocolVersion !== announced.engineProtocol ) {
 		return null;
