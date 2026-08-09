@@ -17,10 +17,7 @@ import {
 	resetEngineAdaptersForTesting,
 	resolveEngineAdapter,
 } from '../engines';
-import {
-	getProviderCreators,
-	resetProviderCreatorsForTesting,
-} from '../providers';
+import { resetProviderCreatorsForTesting } from '../providers';
 
 // The framework ships NO engines; they come from a plugin via
 // `registerSyncEngine` (or the `sync.engines` filter). These tests register a
@@ -132,31 +129,6 @@ describe( 'sync engine adapters', () => {
 				transportProtocol: 1,
 			};
 			expect( resolveEngineAdapter() ).toBeNull();
-		} );
-	} );
-
-	describe( 'transport handshake in getProviderCreators', () => {
-		it( 'returns no providers when no announced transport is registered', () => {
-			window._wpCollaborationEnabled = '1';
-			window._wpCollaborationSync = {
-				engine: STUB_SLUG,
-				engineProtocol: STUB_PROTOCOL,
-				// A transport this client has no provider for.
-				transports: [ 'carrier-pigeon' ],
-				transportProtocol: 1,
-			};
-			expect( getProviderCreators() ).toEqual( [] );
-		} );
-
-		it( 'negotiates a registered transport when one is announced', () => {
-			window._wpCollaborationEnabled = '1';
-			window._wpCollaborationSync = {
-				engine: STUB_SLUG,
-				engineProtocol: STUB_PROTOCOL,
-				transports: [ 'carrier-pigeon', 'http-polling' ],
-				transportProtocol: 1,
-			};
-			expect( getProviderCreators() ).toHaveLength( 1 );
 		} );
 	} );
 } );

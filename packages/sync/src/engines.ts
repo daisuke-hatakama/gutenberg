@@ -65,11 +65,6 @@ export interface AnnouncedSync {
  * the built-in Yjs relay is defined here; plugin engines (e.g. intent-log)
  * carry their own identity constants and register through registerSyncEngine.
  */
-/**
- * Transport slug of the built-in HTTP short-polling provider.
- */
-export const HTTP_POLLING_TRANSPORT_SLUG = 'http-polling';
-
 let engineAdapters: Record< string, SyncEngineAdapter > | null = null;
 
 /**

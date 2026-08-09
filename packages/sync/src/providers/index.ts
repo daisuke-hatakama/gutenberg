@@ -6,16 +6,7 @@ import { applyFilters } from '@wordpress/hooks';
 /**
  * Internal dependencies
  */
-import { createHttpPollingProvider } from './http-polling/http-polling-provider';
-import {
-	createHttpLongPollingProvider,
-	HTTP_LONG_POLLING_TRANSPORT_SLUG,
-} from './http-long-polling/http-long-polling-provider';
-import {
-	createWebSocketProvider,
-	WEBSOCKET_TRANSPORT_SLUG,
-} from './websocket/websocket-provider';
-import { getAnnouncedSync, HTTP_POLLING_TRANSPORT_SLUG } from '../engines';
+import { getAnnouncedSync } from '../engines';
 import type { ProviderCreator } from '../types';
 
 /**
@@ -60,31 +51,15 @@ export function registerSyncTransport(
 }
 
 /**
- * The built-in client transports, in fallback preference order. Adding a
- * transport is a matter of dropping a sibling folder and appending its
- * registration here (or via the `sync.transports` filter) — the negotiation
- * below never changes.
+ * The framework ships NO built-in transports. Transports live in an engines/
+ * transports plugin (the Gutenberg Sync Engines plugin), which registers them
+ * via `registerSyncTransport` (or the `sync.transports` filter). Without such a
+ * plugin the list is empty and no connection is negotiated.
  *
- * @return {TransportRegistration[]} Built-in transports.
+ * @return {TransportRegistration[]} Built-in transports (none).
  */
 function getDefaultTransports(): TransportRegistration[] {
-	return [
-		{
-			slug: HTTP_POLLING_TRANSPORT_SLUG,
-			protocolVersion: 1,
-			create: createHttpPollingProvider,
-		},
-		{
-			slug: HTTP_LONG_POLLING_TRANSPORT_SLUG,
-			protocolVersion: 1,
-			create: createHttpLongPollingProvider,
-		},
-		{
-			slug: WEBSOCKET_TRANSPORT_SLUG,
-			protocolVersion: 1,
-			create: createWebSocketProvider,
-		},
-	];
+	return [];
 }
 
 /**
@@ -120,18 +95,15 @@ function getRegisteredTransports(): TransportRegistration[] {
  * @return {ProviderCreator | null} The chosen provider creator, or null.
  */
 function negotiateTransport(): ProviderCreator | null {
-	const registered = getRegisteredTransports();
 	const announced = getAnnouncedSync();
 
-	// Pre-handshake server (no announcement): default to HTTP polling.
+	// No announcement: nothing to negotiate. The handshake is required, and the
+	// framework ships no default transport to fall back to.
 	if ( ! announced ) {
-		const fallback =
-			registered.find(
-				( t ) => HTTP_POLLING_TRANSPORT_SLUG === t.slug
-			) ?? registered[ 0 ];
-		return fallback ? fallback.create() : null;
+		return null;
 	}
 
+	const registered = getRegisteredTransports();
 	for ( const slug of announced.transports ) {
 		const match = registered.find(
 			( t ) =>

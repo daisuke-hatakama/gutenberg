@@ -111,13 +111,14 @@ describe( 'transport negotiation', () => {
 		expect( getDefaultProviderCreators() ).toEqual( [] );
 	} );
 
-	it( 'defaults to HTTP polling before the server announces', () => {
+	it( 'declines to connect before the server announces (handshake required)', () => {
 		const poll = fakeTransport( 'http-polling' );
 		addFilter( 'sync.transports', FILTER_HOOK, () => [ poll ] );
-		// No _wpCollaborationSync announcement.
+		// No _wpCollaborationSync announcement: the framework ships no default
+		// transport, so there is nothing to negotiate.
 
-		expect( getDefaultProviderCreators() ).toHaveLength( 1 );
-		expect( poll.created ).toBe( 1 );
+		expect( getDefaultProviderCreators() ).toEqual( [] );
+		expect( poll.created ).toBe( 0 );
 	} );
 
 	it( 'getProviderCreators returns [] when collaboration is disabled', () => {
