@@ -1003,14 +1003,18 @@ Resolved since the plan: provider narrowing (Phase 1); the JS engine core's home
 (now the plugin); multi-tab same-user (server-stamped `u{user}c{client}` actor
 ids); and the whole engine/transport hosting split (above). Remaining:
 
-- **Undo is still Yjs-coupled in the framework.** The generic `manager.ts`
-  creates a Yjs-backed undo manager (`undo-manager.ts` + `y-utilities/`, which
-  import Yjs) and scopes it via `EngineEntity.addToUndoScope`; the intent-log
-  engine opts out entirely (`undoManager: undefined`, riding core's
-  WPUndoManager). So the framework is not *quite* engine-free, and intent-log has
-  no first-class undo. The seam: give `EngineEntity` a neutral `undo` capability
-  the engine provides, and move `undo-manager.ts` / `y-utilities/` into the
-  plugin.
+- **Intent-log has no first-class undo (the undo seam has landed).** Undo is now
+  engine-provided: `SyncEngine.createUndoManager?()`. The Yjs undo manager
+  (`undo-manager.ts` + `y-utilities/`) moved into the plugin's yjs-relay engine;
+  the framework carries no undo implementation, only the `SyncUndoManager` type
+  (core-data's contract for replacing the editor's undo while synced). Remaining:
+  (a) give the **intent-log** engine its own `createUndoManager` — inverse
+  intents (invert the user's own local intents and re-author them; the server
+  rebases like any intent, so undo is collaboratively correct and never
+  corrupts) — instead of leaving undo undefined; (b) neutralize the
+  `SyncUndoManager.addToScope(Y.Map)` type leak so the framework's undo type
+  carries no Yjs (make per-entity scoping engine-internal, the yjs
+  `EngineEntity.addToUndoScope` casting to its own concrete undo type).
 - **The frozen intent-log core is dual-homed.** The framework still ships
   `packages/sync/src/engines/intent-log/` solely so the intent-log e2e can
   `import { genesisSyncId }` at compile time; the plugin holds the authoritative

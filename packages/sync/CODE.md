@@ -2,7 +2,7 @@
 
 The `sync` package is the **engine-neutral substrate** for real-time collaboration: a generic sync-manager _shell_, two registries (engines and transports) with a client/server handshake, and the engine SPI that a collaboration engine implements. It ships **no engine and no transport** of its own — both live in a separate plugin (the Gutenberg Sync Engines plugin) and register through this package's unlockable private APIs (`registerSyncEngine` / `registerSyncTransport`) and the `sync.engines` / `sync.transports` / `sync.providers` filters. Without such a plugin, the registries are empty and collaboration degrades to the classic post lock.
 
-> **Note (post-split, 2026-08-10).** Much of the detail below — CRDT (`Y.Doc`) documents, HTTP polling, `Y.Doc` persistence, Yjs undo — describes the behavior of the built-in **yjs-relay** engine, which (with the transports) has moved into the plugin. The framework now only defines the seams they plug into. The generic manager (`createSyncManager( engine, { debug } )`) delegates all document meaning to an injected `SyncEngine` (see `src/engines/engine.ts`). The one Yjs-specific piece still in this package is the `SyncUndoManager` (see _Undo / redo_ — a known TODO). For the full picture see `prototypes/sync/ARCHITECTURE.md`.
+> **Note (post-split, 2026-08-10).** Much of the detail below — CRDT (`Y.Doc`) documents, HTTP polling, `Y.Doc` persistence, Yjs undo — describes the behavior of the built-in **yjs-relay** engine, which (with the transports) has moved into the plugin. The framework now only defines the seams they plug into. The generic manager (`createSyncManager( engine, { debug } )`) delegates all document meaning to an injected `SyncEngine` (see `src/engines/engine.ts`), including undo (`SyncEngine.createUndoManager`). This package no longer contains any engine or transport implementation — its only remaining Yjs references are the deliberate shared `Y` export and a couple of Yjs-typed contract types (`CRDTDoc`, `SyncUndoManager.addToScope`). For the full picture see `prototypes/sync/ARCHITECTURE.md`.
 
 Relevant docs and discussions:
 
@@ -114,11 +114,9 @@ Awareness provides ephemeral presence information (cursor positions, user identi
 
 ## Undo / redo
 
-> **Yjs coupling / TODO.** The `SyncUndoManager` is the one Yjs-specific piece still in this package: the engine-neutral manager creates it and scopes it via `EngineEntity.addToUndoScope`, so the framework is not _quite_ engine-free, and only Yjs-backed engines get first-class undo (the intent-log engine opts out with `undoManager: undefined`). The seam to close: give `EngineEntity` a neutral `undo` capability the engine provides, and move `undo-manager.ts` / `y-utilities/` into the plugin. See `prototypes/sync/ARCHITECTURE.md` → _Open items / TODOs_.
+Undo is **engine-provided**. The generic manager asks the injected engine for a session-scoped, sync-aware undo manager (`SyncEngine.createUndoManager()`), exposes it as `SyncManager.undoManager` — replacing the default WordPress undo manager while synced entities are loaded — and registers each entity with it (`EngineEntity.addToUndoScope`). An engine without collaborative undo leaves it undefined. This package keeps only the `SyncUndoManager` **type** (the WordPress-undo-manager contract core-data consumes).
 
-The `SyncUndoManager` (`src/undo-manager.ts`) replaces the default WordPress undo manager when synced entities are in use. It wraps Yjs's built-in undo functionality.
+Collaborative undo is engine-specific by nature — it must undo only the local client's changes and rebase them over concurrent remote edits, which depends on the merge model — so each engine implements its own:
 
--   **Lazy creation**: The undo manager is created when the first entity is loaded. If no entities are synced, the default WordPress undo manager is used.
--   **Automatic tracking**: Unlike the default undo manager, which explicitly records each edit, the `SyncUndoManager` relies on Yjs to track changes to observed `Y.Map` instances. Only changes with the local editor origin are tracked.
--   **Capture grouping**: Changes within 500ms of each other are grouped into a single undo step, preventing mid-word undo breaks.
--   **Limitation**: Once created, the `SyncUndoManager` only tracks synced entities. Edits to non-synced entities are not included in the undo stack.
+-   **Yjs relay** (in the plugin): wraps Yjs's undo (`YMultiDocUndoManager`) — Yjs tracks changes to observed `Y.Map`s per entity, gives each peer its own stack, groups edits within 500ms, and tracks only local-origin changes.
+-   **Intent-log** (planned): inverse intents — invert the user's own local intents and re-author them, letting the server rebase like any intent (see `prototypes/sync/ARCHITECTURE.md` → _Open items / TODOs_). It currently leaves undo undefined.
