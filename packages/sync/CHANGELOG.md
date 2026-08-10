@@ -2,11 +2,22 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+-   This package no longer ships any built-in sync engine or transport. `getDefaultEngineAdapters()` and `getDefaultTransports()` are now empty; an engine/transport plugin must register implementations — via the private `registerSyncEngine` / `registerSyncTransport` APIs or the `sync.engines` / `sync.transports` filters — for real-time collaboration to work. Without one, a session finds nothing to negotiate and the editor falls back to the exclusive post lock. The Yjs relay engine and the HTTP short-poll / long-poll / WebSocket transports moved out of this package (into the Gutenberg Sync Engines plugin); the package keeps only the engine-neutral manager shell, the two registries with negotiation, the engine SPI, and its shared Yjs export (`wp.sync.Y`).
+-   `resolveEngineAdapter()` and transport negotiation no longer fall back to the Yjs relay / HTTP polling when the server announces nothing. With no built-in to fall back to, a missing announcement resolves to no engine and declines to connect — the client/server handshake is now required.
+
+### New Features
+
+-   Add the engine SPI so a plugin can implement a sync engine and compose it with the generic manager: `SyncEngine` (a factory of per-entity/collection cores) → `EngineEntity` / `EngineCollection` (which own the document model — local-change application, hydration, snapshot, undo scope, remote-change observation) → the existing `EngineSessionCodec` (transport-facing), all exported as public types. The private API adds `registerSyncEngine` / `registerSyncTransport` (imperative registration) and `getProviderCreators`, plus registry test-support helpers.
+
 ### Enhancements
 
 -   Sync transports are now swappable. The client keeps a slug-keyed transport registry (filterable via `sync.transports`) and NEGOTIATES against the server's announced transport list — using the first announced slug it has registered whose protocol it implements — instead of assuming HTTP short-polling. Selection code is transport-agnostic; adding a transport is a sibling folder plus a registration.
 -   Add an HTTP long-polling transport (`http-long-polling`): the shared polling manager pointed at a held-open server route with an immediate re-issue cadence, so remote edits arrive promptly without tight polling.
 -   Add a WebSocket transport (`websocket`): a codec-driven push client (`providers/websocket/`) over a persistent socket served by a long-running PHP daemon (`WP_WebSocket_Sync_Server`, `wp collaboration sync-server`). Both the daemon and the REST transports drive rooms through the same `WP_Sync_Engine` seam, so engines stay swappable across transports.
+-   `createSyncManager` is now engine-neutral: `createSyncManager( engine, { debug } )` composes an injected `SyncEngine` with a generic shell that owns negotiation, provider wiring, entity/collection lifecycle, and the deferred-update policy. Engine adapters compose it inside `createManager`; the manager no longer hardcodes Yjs (its entity AND collection paths delegate to the engine).
+-   Connection retry is now transport-agnostic. `SyncManager.retry()` asks every live provider (via a new optional `ProviderCreatorResult.retry()`) to reconnect, and `retrySyncConnection` (now owned by `core-data`) drives it through the active manager — instead of reaching into the HTTP-polling singleton, which did nothing when a different transport was active.
 
 ### Bug Fixes
 
@@ -29,6 +40,7 @@
 -   Parked escalations gained a full review lifecycle: sessions expose the open-proposal list (`getOpenProposals`/`onProposalsChange`) reconstructed entirely from retained rows, a new `resolved` wire row closes a proposal idempotently (server-stamped attribution), proposal rows carry review context (settlement seq, timestamp, target-field excerpt), the manager offers `resolveProposal`/`restoreProposal` (best-effort re-author of the lost content as ordinary edits), and compaction now drops resolved proposal pairs while retaining open ones indefinitely.
 -   The intent-log capture layer moved from HTML-string diffing to RICH-TEXT coordinates: a vector-frozen codec (JS + PHP twin) converts inline HTML to plain text + format spans, text intents carry markup-free offsets, every registry-declared rich-text attribute becomes its own field, paragraph splits/merges derive as `split_block`/`merge_blocks`, and formatting changes derive as `format_text` — concurrent formatting and typing in one paragraph now merge cleanly instead of escalating or corrupting markup.
 -   Intent-log growth is now bounded on both sides: the server appends periodic compaction checkpoints, serves late joiners and stale cursors from the latest retained checkpoint (a reset snapshot the session re-bootstraps from, with the manager re-deriving unsent work from the editor tree), trims history behind the previous checkpoint while preserving parked proposals, and answers pure read polls without reconstructing engine state; the client replica trims its observed log below what replanning can ever need.
+-   Remove the vestigial `SyncEngineAdapter.createSessionCodec`. The engine's per-room core (`EngineEntity`/`EngineCollection`) owns the transport-facing session codec now (via `createSession()`), so the adapter field was dead.
 
 ## 1.51.0 (2026-07-14)
 
