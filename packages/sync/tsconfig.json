@@ -5,7 +5,6 @@
 		"types": [ "node" ]
 	},
 	"exclude": [
-		"src/y-utilities/y-multidoc-undomanager.js",
 		// The intent-log engine core graduated from prototypes/sync with
 		// generic JSDoc types; behavior is pinned by its jest suites and the
 		// frozen cross-language vectors. Proper typing lands with the Phase 2

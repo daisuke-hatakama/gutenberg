@@ -150,4 +150,19 @@ export interface SyncEngine {
 		syncConfig: SyncConfig;
 		objectType: ObjectType;
 	} ) => EngineCollection;
+	/**
+	 * Creates the session-scoped, sync-aware undo manager for this engine —
+	 * the object exposed as `SyncManager.undoManager` that replaces the
+	 * editor's undo while synced entities are loaded. Collaborative undo is
+	 * intrinsically engine-specific (it must undo only the local client's
+	 * changes and rebase over concurrent remote ones, which depends on the
+	 * merge model), so the engine owns the whole implementation.
+	 *
+	 * Optional: an engine without collaborative undo omits it. Until the Yjs
+	 * engine provides one, the generic manager falls back to the built-in Yjs
+	 * undo manager (`undo-manager.ts`) — the last Yjs code in the framework,
+	 * slated to move into the plugin with this method (see
+	 * `prototypes/sync/ARCHITECTURE.md` → _Open items / TODOs_).
+	 */
+	createUndoManager?: () => SyncUndoManager | undefined;
 }

@@ -27,7 +27,6 @@ import type {
 	SyncManagerUpdateOptions,
 	SyncUndoManager,
 } from './types';
-import { createUndoManager } from './undo-manager';
 
 interface CollectionState {
 	awareness?: Awareness;
@@ -209,17 +208,22 @@ export function createSyncManager(
 			entityStates.delete( entityId );
 		};
 
-		// Lazily create the undo manager when the first entity is loaded.
+		// Lazily create the undo manager when the first entity is loaded. Undo
+		// is engine-specific (see SyncEngine.createUndoManager), so the engine
+		// owns it; an engine without collaborative undo leaves it undefined.
 		if ( ! undoManager ) {
-			undoManager = createUndoManager();
+			undoManager = engine.createUndoManager?.();
 		}
 
-		const { addUndoMeta, onUndoStackChange, restoreUndoMeta } = handlers;
-		core.addToUndoScope( undoManager, {
-			addUndoMeta,
-			restoreUndoMeta,
-			onUndoStackChange,
-		} );
+		if ( undoManager ) {
+			const { addUndoMeta, onUndoStackChange, restoreUndoMeta } =
+				handlers;
+			core.addToUndoScope( undoManager, {
+				addUndoMeta,
+				restoreUndoMeta,
+				onUndoStackChange,
+			} );
+		}
 
 		// Declare with let before using it in unload closure.
 		// eslint-disable-next-line prefer-const
