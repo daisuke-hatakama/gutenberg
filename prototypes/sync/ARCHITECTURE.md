@@ -1,8 +1,11 @@
 # Swappable sync architecture — integration plan
 
-Status: planning note (2026-08-05). Companion to `SPEC.md` (engine) and
-`INTEGRATION.md` (capture/Redux analysis). Target: the intent-log engine
-fully integrated into WordPress + Gutenberg, under these constraints:
+Status: **realized + split (2026-08-10).** The plan below is implemented, and
+the pluggable surface has since been fully extracted into a separate plugin
+(see _The framework/plugin split_ under _Architecture at a glance_). Companion
+to `SPEC.md` (engine) and `INTEGRATION.md` (capture/Redux analysis). Original
+target — the intent-log engine fully integrated into WordPress + Gutenberg —
+under these constraints:
 
 1. Engines swappable (intent-log ↔ Automerge ↔ Yjs relay) — a class swap
    server-side, a config change client-side.
@@ -28,60 +31,81 @@ Collaboration is a **three-plane** stack — bridge (capture) / engine
 without touching the other. Both are announced on the wire and negotiated;
 no match on either falls back to WordPress post locking.
 
+### The framework/plugin split (2026-08-10)
+
+Gutenberg hosts only the engine-and-transport-agnostic **substrate**. Every
+engine and transport — the entire pluggable surface, client *and* server —
+lives in the **Gutenberg Sync Engines plugin** (`~/Code/gutenberg-sync-engines`,
+its own git repo). Without the plugin active the registries are empty, the
+server announces no engine, the client resolves none, and RTC is disabled (the
+classic post lock). The framework ships **no engine and no transport code**; it
+keeps:
+
+- the generic, engine-neutral **sync-manager shell** (`manager.ts` —
+  `createSyncManager( engine, { debug } )`);
+- the two **registries + negotiation** (`engines.ts` for engines,
+  `providers/index.ts` for transports) and the `registerSyncEngine` /
+  `registerSyncTransport` private APIs a plugin registers through;
+- the **engine SPI** — `SyncEngine` → `EngineEntity` / `EngineCollection`
+  (own the document model) → `EngineSessionCodec` (transport-facing), plus the
+  `SyncEngineAdapter` / `TransportRegistration` shapes;
+- the room/permission/storage **contracts** (`WP_Sync_Engine` /
+  `WP_Sync_Transport` / `WP_Sync_Storage`, `WP_Sync_Config`), the server
+  registries, and the entity bridge + review UI in `core-data`/`editor`;
+- its shared **Yjs export** (`wp.sync.Y`) so a plugin's Yjs shares the one
+  instance (yjs/issues/438).
+
+An engine plugin implements `SyncEngine` and composes it —
+`createManager: (debug) => createSyncManager( createMyEngine(), { debug } )` —
+in a `SyncEngineAdapter`; a transport implements a `ProviderCreator`. Both
+register client-side by unlocking `@wordpress/sync`'s private APIs, and
+server-side through the `wp_sync_engines` / `wp_sync_transports` filters.
+
 ### Component map
 
 ```mermaid
 flowchart TB
-  subgraph CLIENT["Client (packages/sync/src)"]
+  subgraph FW["FRAMEWORK — Gutenberg (substrate; ships no engines/transports)"]
     direction TB
-    ED["Editor block tree"]
-    BR["Bridge<br/>intent-log-bridge.ts"]
-    MG["Manager<br/>intent-log-manager.ts"]
-    SES["Session codec<br/>(EngineSessionCodec)"]
-    EAR["Engine adapter registry<br/>engines.ts"]
-    TR["Transport registry + negotiation<br/>providers/index.ts"]
-    CP1["http-polling"]
-    CP2["http-long-polling"]
-    CP3["websocket"]
-    ED <--> BR
-    BR <--> MG
-    MG <--> SES
-    EAR -.->|picks engine| MG
-    TR -.->|picks transport| SES
-    SES <--> CP1
-    SES <--> CP2
-    SES <--> CP3
+    subgraph FWC["Client — packages/sync/src"]
+      MG["Generic manager shell<br/>manager.ts (engine-neutral)"]
+      SPI["Engine SPI<br/>engines/engine.ts + engines/session.ts"]
+      EAR["Engine registry + negotiation<br/>engines.ts"]
+      TR["Transport registry + negotiation<br/>providers/index.ts"]
+      YEXP["shared Yjs export<br/>(wp.sync.Y)"]
+    end
+    subgraph FWS["Server — lib/experimental/collaboration"]
+      ICON["Contracts + registries<br/>WP_Sync_Engine/Transport/Storage"]
+      CFGSRV["WP_Sync_Config (rooms, caps)<br/>+ postmeta storage + announcement"]
+    end
   end
 
-  subgraph SVR["Server (lib/experimental/collaboration)"]
+  subgraph PL["PLUGIN — gutenberg-sync-engines (all engines + transports)"]
     direction TB
-    STR["Transport registry<br/>WP_Sync_Transport_Registry"]
-    RT1["/updates (polling)"]
-    RT2["/long-poll"]
-    RT3["WebSocket daemon<br/>(wp collaboration sync-server)"]
-    PRR["process_room_request()<br/>shared engine seam"]
-    SER["Engine registry<br/>WP_Sync_Engine_Registry"]
-    EIL["WP_Intent_Log_Engine"]
-    EYJ["WP_Yjs_Relay_Engine"]
-    STO[("postmeta log<br/>WP_Sync_Post_Meta_Storage")]
-    STR --> RT1
-    STR --> RT2
-    STR --> RT3
-    RT1 --> PRR
-    RT2 --> PRR
-    RT3 --> PRR
-    PRR --> SER
-    SER --> EIL
-    SER --> EYJ
-    EIL --> STO
-    EYJ --> STO
+    subgraph PLC["Client — src/"]
+      ILE["intent-log engine<br/>bridge/manager/session + frozen core"]
+      YJE["yjs-relay engine<br/>engine/session/doc/snapshot"]
+      ADP["engine adapters"]
+      TPS["transports<br/>http-polling / long-poll / websocket"]
+    end
+    subgraph PLS["Server — includes/"]
+      PENG["WP_Intent_Log_Engine +<br/>WP_Yjs_Relay_Engine"]
+      PTR["polling / long-poll / websocket servers"]
+      SET["Settings → Collaboration"]
+    end
   end
 
-  CP1 <-->|"opaque updates + awareness"| STR
-  CP2 <--> STR
-  CP3 <--> STR
-  CFG["Single config value<br/>WP_COLLABORATION_TRANSPORT"] -.->|selects| STR
-  OPT["wp_sync_engine option"] -.->|selects| SER
+  ILE --> ADP
+  YJE --> ADP
+  ADP -.->|registerSyncEngine| EAR
+  TPS -.->|registerSyncTransport| TR
+  EAR -.->|resolves announced engine| MG
+  TR -.->|negotiates transport| MG
+  YJE -.->|shares instance| YEXP
+  PENG -.->|wp_sync_engines filter| ICON
+  PTR -.->|wp_sync_transports filter| ICON
+  OPT["wp_sync_engine option"] -.->|selects| ICON
+  CFG["WP_COLLABORATION_TRANSPORT"] -.->|selects| ICON
 ```
 
 ### An edit's round trip
@@ -130,26 +154,35 @@ flowchart TD
   RE --> A
 ```
 
-Key files by plane:
+Key files by plane (F = framework/Gutenberg, P = plugin):
 
-- **Bridge** (client): `packages/sync/src/engines/intent-log-bridge.ts`,
-  `-manager.ts`, `-session.ts`.
-- **Engine** (both languages): frozen JS core in
-  `packages/sync/src/engines/intent-log/` (rebase/document/rich-text/sync-id
-  + `test-vectors/`), PHP twins in
-  `lib/experimental/collaboration/class-wp-intent-log-*.php`.
-- **Transport**: client `packages/sync/src/providers/` (registry in
-  `index.ts`, one folder per transport); server
-  `lib/experimental/collaboration/transports/` (registry, interface, the
-  three transports; `websocket/` holds the daemon + token + CLI).
-- **Store + UI**: `packages/core-data/src/` (`sync.ts`, `resolvers.js`,
-  `syncReviewItems` store) and
+- **Substrate** (F): client `packages/sync/src` — `manager.ts` (engine-neutral
+  shell), `engines.ts` + `providers/index.ts` (registries + negotiation),
+  `engines/engine.ts` + `engines/session.ts` (the SPI), `private-apis.ts` (the
+  unlockable registration surface); server `lib/experimental/collaboration/`
+  (the `WP_Sync_*` contracts + registries, `WP_Sync_Config`, storage,
+  announcement); store + UI `packages/core-data/src` (`sync.ts`,
+  `retrySyncConnection → manager.retry()`, the entity bridge) and
   `packages/editor/src/components/collaboration-review-panel/` (panel +
   in-canvas markers + inline approval card).
-- **Tooling**: `packages/sync/src/debug/inspector.ts` (console inspector),
-  `test/php/sync-engine-benchmarks/` (seam-native engine benchmark).
+- **Bridge + Engine** (P, both languages): `src/engines/intent-log-bridge.ts`,
+  `-manager.ts`, `-session.ts`; frozen cross-language core
+  `src/engines/intent-log/` (rebase/document/rich-text/sync-id +
+  `test-vectors/`); `src/engines/yjs-relay/` (session/engine/doc/snapshot/
+  constants); adapters `src/engines/{intent-log,yjs-relay}-adapter.ts`; PHP
+  twins under `includes/engines/`.
+- **Transport** (P): client `src/providers/{http-polling,http-long-polling,
+  websocket}/` (one folder per transport); server `includes/transports/`
+  (registry-registered routes; `websocket/` holds the daemon + token + CLI).
+- **Tooling** (P): `src/debug/inspector.ts` (console inspector),
+  `tools/sync-engine-benchmarks/` (seam-native engine benchmark).
 
-## Current surface (trunk, this branch)
+## Starting surface (pre-refactor baseline — superseded by the split above)
+
+> This was the trunk surface the plan below started from. It is kept for
+> provenance; the shipped picture is _Architecture at a glance_ above (the
+> `SyncManager` is now the engine-neutral shell, and the Yjs stack + transports
+> have moved into the plugin).
 
 Server — `lib/experimental/collaboration/`:
 
@@ -935,14 +968,70 @@ inside intent payloads, not the transport.
   DEFERRED refinement: the DE-RTC multi-process request-queue model (tail
   latency under worker saturation) can layer on top of these adapters.
 
-## Open items
+- **Framework/plugin split — DONE (2026-08-10).** The entire pluggable surface
+  — every engine and transport, client and server — moved into a separate
+  **Gutenberg Sync Engines plugin**; the framework became a pure substrate
+  (manager shell + registries + SPI + contracts). Landed as a sequence of
+  behavior-preserving steps, each unit- and e2e-verified:
+  - **Engine SPI + engine-neutral manager.** Extracted `SyncEngine` /
+    `EngineEntity` / `EngineCollection` (`engines/engine.ts`); rewrote the
+    manager's Yjs-specific entity *and* collection paths to delegate to an
+    injected engine, then flipped the signature to
+    `createSyncManager( engine, { debug } )`. Adapters compose it; the vestigial
+    `SyncEngineAdapter.createSessionCodec` is gone (the engine owns the codec).
+  - **Transport-agnostic retry (E2).** `retrySyncConnection` no longer reaches
+    into the http-polling singleton — `SyncManager.retry()` asks each live
+    provider (`ProviderCreatorResult.retry?()`) to retry, driven by core-data's
+    active manager. (Also fixed a latent bug: retry hit http-polling even when a
+    different transport was active.)
+  - **Engine relocation (4b).** The whole Yjs stack (session/engine/doc/snapshot/
+    constants/awareness) moved to the plugin; `getDefaultEngineAdapters()` → `[]`;
+    `resolveEngineAdapter()` requires the announcement (no built-in fallback).
+    The intent-log engine had moved earlier.
+  - **Transport relocation.** All three transports moved to the plugin;
+    `getDefaultTransports()` → `[]`; `negotiateTransport()` requires the
+    announcement.
 
-- Provider interface narrowing (removing Y.Doc from `ProviderCreatorOptions`)
-  is the riskiest refactor in Phase 0; needs its own regression pass over
-  the http-polling provider tests.
-- Undo for the intent-log adapter (Yjs undo manager is engine-specific).
-- Multi-tab same-user (the prototype assumes one session per actor;
-  actorId probably becomes user+session scoped before Phase 2).
-- Where the JS engine core finally lives (`packages/sync/src/engines/…`
-  vs its own package) — decide at Phase 1 by whether anything outside
-  `packages/sync` needs to import it.
+  Verified: the framework built bundle contains zero engine and zero transport
+  code; both engines pass their e2e sourced solely from the plugin (yjs
+  collaboration-sync 4/4, intent-log 20/20). Plugin-side docs live in its
+  `README.md` + `PORTING.md`.
+
+## Open items / TODOs
+
+Resolved since the plan: provider narrowing (Phase 1); the JS engine core's home
+(now the plugin); multi-tab same-user (server-stamped `u{user}c{client}` actor
+ids); and the whole engine/transport hosting split (above). Remaining:
+
+- **Undo is still Yjs-coupled in the framework.** The generic `manager.ts`
+  creates a Yjs-backed undo manager (`undo-manager.ts` + `y-utilities/`, which
+  import Yjs) and scopes it via `EngineEntity.addToUndoScope`; the intent-log
+  engine opts out entirely (`undoManager: undefined`, riding core's
+  WPUndoManager). So the framework is not *quite* engine-free, and intent-log has
+  no first-class undo. The seam: give `EngineEntity` a neutral `undo` capability
+  the engine provides, and move `undo-manager.ts` / `y-utilities/` into the
+  plugin.
+- **The frozen intent-log core is dual-homed.** The framework still ships
+  `packages/sync/src/engines/intent-log/` solely so the intent-log e2e can
+  `import { genesisSyncId }` at compile time; the plugin holds the authoritative
+  copy. Consolidate (e2e imports the plugin's copy, or the genesis helper is
+  published) so the framework carries no engine code at all.
+- **CRDT wire constants are duplicated.** The plugin's
+  `engines/yjs-relay/constants.ts` copies the `CRDT_*` values that used to live
+  in the framework's `config.ts` — a frozen contract, but a drift risk. A shared
+  source or a cross-repo contract test would harden it.
+- **The e2e plugin mount is not persistent.** The intent-log/yjs e2e runs against
+  a plugin `docker cp`'d into the wp-env test container plus a gitignored
+  `.wp-env.override.json` — neither is committed. For repeatable/CI runs, mount
+  the plugin from the tests-env config (or add a CI step that builds + installs
+  it). Note the stale-copy/opcache gotcha this caused: the container serves a
+  `docker cp`'d copy, and php-fpm opcache won't revalidate it — re-copy the
+  plugin (with `build/`) and restart the container.
+- **WebSocket full path is a live smoke only.** Two-browser WS sync can't run in
+  wp-env's e2e harness (no long-lived daemon); the daemon is verified to bind and
+  the client provider is unit-tested, but the full loop is a documented manual
+  check.
+- **Design-scoped:** selection/caret sharing for intent-log (presence works;
+  carets need an engine-side transport); the deeper review-model items
+  (frame/txn state across request boundaries 1.3c, independent effect-model
+  oracles 3.1); and the DE-RTC multi-process request-queue benchmark refinement.
