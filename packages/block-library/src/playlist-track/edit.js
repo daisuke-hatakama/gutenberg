@@ -6,6 +6,7 @@ import {
 	MediaUpload,
 	MediaUploadCheck,
 	BlockIcon,
+	store as blockEditorStore,
 	useBlockProps,
 	BlockControls,
 	InspectorControls,
@@ -20,7 +21,7 @@ import {
 	Spinner,
 } from '@wordpress/components';
 import { Link } from '@wordpress/ui';
-import { useDispatch } from '@wordpress/data';
+import { useDispatch, useSelect } from '@wordpress/data';
 import { store as noticesStore } from '@wordpress/notices';
 import { __ } from '@wordpress/i18n';
 import { audio as icon } from '@wordpress/icons';
@@ -31,6 +32,19 @@ import { useUploadMediaFromBlobURL } from '../utils/hooks';
 
 const ALLOWED_MEDIA_TYPES = [ 'audio' ];
 const TRACK_IMAGE_ALLOWED_MEDIA_TYPES = [ 'image' ];
+
+function getSharedTrackAttribute( tracks, attribute ) {
+	if ( tracks.length === 0 ) {
+		return '';
+	}
+
+	const firstValue = tracks[ 0 ].attributes[ attribute ] || '';
+	const hasSharedValue = tracks.every(
+		( track ) => ( track.attributes[ attribute ] || '' ) === firstValue
+	);
+
+	return hasSharedValue ? firstValue : '';
+}
 
 const PlaylistTrackEdit = ( {
 	attributes,
@@ -49,10 +63,59 @@ const PlaylistTrackEdit = ( {
 	const { currentTrackClientId, setCurrentTrackClientId } =
 		useContext( PlaylistContext );
 	const { createErrorNotice } = useDispatch( noticesStore );
+	const { updateBlockAttributes } = useDispatch( blockEditorStore );
+	const { selectedTrackClientIds, selectedTracks } = useSelect(
+		( select ) => {
+			const {
+				getBlock,
+				getBlockName,
+				getBlockRootClientId,
+				getMultiSelectedBlockClientIds,
+			} = select( blockEditorStore );
+			const multiSelectedClientIds = getMultiSelectedBlockClientIds();
+			const playlistClientId = getBlockRootClientId( clientId );
+
+			if ( multiSelectedClientIds.length <= 1 || ! playlistClientId ) {
+				return {
+					selectedTrackClientIds: [],
+					selectedTracks: [],
+				};
+			}
+
+			const isSelectingPlaylistTracks = multiSelectedClientIds.every(
+				( selectedClientId ) =>
+					getBlockName( selectedClientId ) ===
+						'core/playlist-track' &&
+					getBlockRootClientId( selectedClientId ) ===
+						playlistClientId
+			);
+
+			if ( ! isSelectingPlaylistTracks ) {
+				return {
+					selectedTrackClientIds: [],
+					selectedTracks: [],
+				};
+			}
+
+			return {
+				selectedTrackClientIds: multiSelectedClientIds,
+				selectedTracks: multiSelectedClientIds
+					.map( getBlock )
+					.filter( Boolean ),
+			};
+		},
+		[ clientId ]
+	);
 	function onUploadError( message ) {
 		createErrorNotice( message, { type: 'snackbar' } );
 	}
 	const hasTrackSource = !! src || !! temporaryURL;
+	const hasSelectedTracks = selectedTrackClientIds.length > 1;
+	const isEditingSelectedTracks =
+		hasSelectedTracks && selectedTrackClientIds[ 0 ] === clientId;
+	const selectedTracksHaveImage = selectedTracks.some(
+		( track ) => !! track.attributes.image
+	);
 
 	useEffect( () => {
 		if (
@@ -121,6 +184,28 @@ const PlaylistTrackEdit = ( {
 		imageButton.current.focus();
 	}
 
+	function updateSelectedTracksAttribute( attribute ) {
+		return ( value ) => {
+			updateBlockAttributes( selectedTrackClientIds, {
+				[ attribute ]: value,
+			} );
+		};
+	}
+
+	function onSelectSelectedTrackImage( trackImage ) {
+		updateBlockAttributes(
+			selectedTrackClientIds,
+			getTrackImageAttributes( trackImage )
+		);
+	}
+
+	function onRemoveSelectedTrackImage() {
+		updateBlockAttributes( selectedTrackClientIds, {
+			image: undefined,
+			imageAlt: undefined,
+		} );
+	}
+
 	if ( ! hasTrackSource ) {
 		return (
 			<div { ...blockProps }>
@@ -156,100 +241,212 @@ const PlaylistTrackEdit = ( {
 					variant="toolbar"
 				/>
 			</BlockControls>
-			<InspectorControls>
-				<PanelBody title={ __( 'Settings' ) }>
-					<TextControl
-						label={ __( 'Artist' ) }
-						value={ artist ? stripHTML( artist ) : '' }
-						onChange={ ( artistValue ) => {
-							setAttributes( { artist: artistValue } );
-						} }
-					/>
-					<TextControl
-						label={ __( 'Album' ) }
-						value={ album ? stripHTML( album ) : '' }
-						onChange={ ( albumValue ) => {
-							setAttributes( { album: albumValue } );
-						} }
-					/>
-					<TextControl
-						label={ __( 'Title' ) }
-						value={ title ? stripHTML( title ) : '' }
-						onChange={ ( titleValue ) => {
-							setAttributes( { title: titleValue } );
-						} }
-					/>
-					<MediaUploadCheck>
-						<BaseControl>
-							<BaseControl.VisualLabel>
-								{ __( 'Track image' ) }
-							</BaseControl.VisualLabel>
-							<div className="editor-video-poster-control">
-								{ !! image && (
-									<img
-										src={ image }
-										alt={ __(
-											'Preview of the track image'
+			{ isEditingSelectedTracks && (
+				<InspectorControls>
+					<PanelBody title={ __( 'Selected tracks' ) }>
+						<TextControl
+							label={ __( 'Artist' ) }
+							value={ stripHTML(
+								getSharedTrackAttribute(
+									selectedTracks,
+									'artist'
+								)
+							) }
+							onChange={ updateSelectedTracksAttribute(
+								'artist'
+							) }
+						/>
+						<TextControl
+							label={ __( 'Album' ) }
+							value={ stripHTML(
+								getSharedTrackAttribute(
+									selectedTracks,
+									'album'
+								)
+							) }
+							onChange={ updateSelectedTracksAttribute(
+								'album'
+							) }
+						/>
+						<MediaUploadCheck>
+							<BaseControl>
+								<BaseControl.VisualLabel>
+									{ __( 'Track image' ) }
+								</BaseControl.VisualLabel>
+								<div className="editor-video-poster-control">
+									{ !! getSharedTrackAttribute(
+										selectedTracks,
+										'image'
+									) && (
+										<img
+											src={ getSharedTrackAttribute(
+												selectedTracks,
+												'image'
+											) }
+											alt={ __(
+												'Preview of the track image'
+											) }
+										/>
+									) }
+									<MediaUpload
+										title={ __( 'Select image' ) }
+										onSelect={ onSelectSelectedTrackImage }
+										allowedTypes={
+											TRACK_IMAGE_ALLOWED_MEDIA_TYPES
+										}
+										render={ ( { open } ) => (
+											<Button
+												__next40pxDefaultSize
+												variant="primary"
+												onClick={ open }
+												ref={ imageButton }
+											>
+												{ ! selectedTracksHaveImage
+													? __( 'Select' )
+													: __( 'Replace' ) }
+											</Button>
 										) }
 									/>
-								) }
-								<MediaUpload
-									title={ __( 'Select image' ) }
-									onSelect={ onSelectTrackImage }
-									allowedTypes={
-										TRACK_IMAGE_ALLOWED_MEDIA_TYPES
-									}
-									render={ ( { open } ) => (
+									{ selectedTracksHaveImage && (
 										<Button
 											__next40pxDefaultSize
-											variant="primary"
-											onClick={ open }
-											ref={ imageButton }
+											onClick={
+												onRemoveSelectedTrackImage
+											}
+											variant="tertiary"
 										>
-											{ ! image
-												? __( 'Select' )
-												: __( 'Replace' ) }
+											{ __( 'Remove' ) }
 										</Button>
 									) }
-								/>
-								{ !! image && (
-									<Button
-										__next40pxDefaultSize
-										onClick={ onRemoveTrackImage }
-										variant="tertiary"
-									>
-										{ __( 'Remove' ) }
-									</Button>
+								</div>
+							</BaseControl>
+						</MediaUploadCheck>
+						{ selectedTracksHaveImage && (
+							<TextareaControl
+								label={ __( 'Alternative text' ) }
+								value={ getSharedTrackAttribute(
+									selectedTracks,
+									'imageAlt'
 								) }
-							</div>
-						</BaseControl>
-					</MediaUploadCheck>
-					{ !! image && (
-						<TextareaControl
-							label={ __( 'Alternative text' ) }
-							value={ imageAlt || '' }
-							onChange={ ( value ) =>
-								setAttributes( { imageAlt: value } )
-							}
-							help={
-								<Link
-									openInNewTab
-									href={
-										// translators: Localized tutorial, if one exists. W3C Web Accessibility Initiative link has list of existing translations.
-										__(
-											'https://www.w3.org/WAI/tutorials/images/decision-tree/'
-										)
-									}
-								>
-									{ __(
-										'Describe the purpose of the image.'
-									) }
-								</Link>
-							}
+								onChange={ updateSelectedTracksAttribute(
+									'imageAlt'
+								) }
+								help={
+									<Link
+										openInNewTab
+										href={
+											// translators: Localized tutorial, if one exists. W3C Web Accessibility Initiative link has list of existing translations.
+											__(
+												'https://www.w3.org/WAI/tutorials/images/decision-tree/'
+											)
+										}
+									>
+										{ __(
+											'Describe the purpose of the image.'
+										) }
+									</Link>
+								}
+							/>
+						) }
+					</PanelBody>
+				</InspectorControls>
+			) }
+			{ ! hasSelectedTracks && (
+				<InspectorControls>
+					<PanelBody title={ __( 'Settings' ) }>
+						<TextControl
+							label={ __( 'Artist' ) }
+							value={ artist ? stripHTML( artist ) : '' }
+							onChange={ ( artistValue ) => {
+								setAttributes( { artist: artistValue } );
+							} }
 						/>
-					) }
-				</PanelBody>
-			</InspectorControls>
+						<TextControl
+							label={ __( 'Album' ) }
+							value={ album ? stripHTML( album ) : '' }
+							onChange={ ( albumValue ) => {
+								setAttributes( { album: albumValue } );
+							} }
+						/>
+						<TextControl
+							label={ __( 'Title' ) }
+							value={ title ? stripHTML( title ) : '' }
+							onChange={ ( titleValue ) => {
+								setAttributes( { title: titleValue } );
+							} }
+						/>
+						<MediaUploadCheck>
+							<BaseControl>
+								<BaseControl.VisualLabel>
+									{ __( 'Track image' ) }
+								</BaseControl.VisualLabel>
+								<div className="editor-video-poster-control">
+									{ !! image && (
+										<img
+											src={ image }
+											alt={ __(
+												'Preview of the track image'
+											) }
+										/>
+									) }
+									<MediaUpload
+										title={ __( 'Select image' ) }
+										onSelect={ onSelectTrackImage }
+										allowedTypes={
+											TRACK_IMAGE_ALLOWED_MEDIA_TYPES
+										}
+										render={ ( { open } ) => (
+											<Button
+												__next40pxDefaultSize
+												variant="primary"
+												onClick={ open }
+												ref={ imageButton }
+											>
+												{ ! image
+													? __( 'Select' )
+													: __( 'Replace' ) }
+											</Button>
+										) }
+									/>
+									{ !! image && (
+										<Button
+											__next40pxDefaultSize
+											onClick={ onRemoveTrackImage }
+											variant="tertiary"
+										>
+											{ __( 'Remove' ) }
+										</Button>
+									) }
+								</div>
+							</BaseControl>
+						</MediaUploadCheck>
+						{ !! image && (
+							<TextareaControl
+								label={ __( 'Alternative text' ) }
+								value={ imageAlt || '' }
+								onChange={ ( value ) =>
+									setAttributes( { imageAlt: value } )
+								}
+								help={
+									<Link
+										openInNewTab
+										href={
+											// translators: Localized tutorial, if one exists. W3C Web Accessibility Initiative link has list of existing translations.
+											__(
+												'https://www.w3.org/WAI/tutorials/images/decision-tree/'
+											)
+										}
+									>
+										{ __(
+											'Describe the purpose of the image.'
+										) }
+									</Link>
+								}
+							/>
+						) }
+					</PanelBody>
+				</InspectorControls>
+			) }
 			<li { ...blockProps }>
 				{ !! temporaryURL && <Spinner /> }
 				<button

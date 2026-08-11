@@ -1,12 +1,15 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { useDispatch } from '@wordpress/data';
+import { useDispatch, useSelect } from '@wordpress/data';
+import { store as blockEditorStore } from '@wordpress/block-editor';
 import PlaylistTrackEdit from '../edit';
 import { PlaylistContext } from '../../playlist/context';
 import { useUploadMediaFromBlobURL } from '../../utils/hooks';
 
 let mockMediaReplaceFlowProps;
+let mockMediaUploadProps;
 
 jest.mock( '@wordpress/block-editor', () => ( {
+	store: 'core/block-editor',
 	BlockControls: ( { children } ) => <div>{ children }</div>,
 	BlockIcon: () => <span />,
 	InspectorControls: ( { children } ) => <div>{ children }</div>,
@@ -16,8 +19,10 @@ jest.mock( '@wordpress/block-editor', () => ( {
 		const { name, onSelect } = props;
 		return <button onClick={ () => onSelect( {} ) }>{ name }</button>;
 	},
-	MediaUpload: ( { render: renderMediaUpload } ) =>
-		renderMediaUpload( { open: jest.fn() } ),
+	MediaUpload: ( props ) => {
+		mockMediaUploadProps.push( props );
+		return props.render( { open: jest.fn() } );
+	},
 	MediaUploadCheck: ( { children } ) => <div>{ children }</div>,
 	PlainText: ( {
 		onChange,
@@ -32,6 +37,7 @@ jest.mock( '@wordpress/block-editor', () => ( {
 
 jest.mock( '@wordpress/data', () => ( {
 	useDispatch: jest.fn(),
+	useSelect: jest.fn(),
 	combineReducers: jest.fn( ( reducers ) => ( state = {}, action ) => {
 		const newState = {};
 		Object.keys( reducers ).forEach( ( key ) => {
@@ -96,10 +102,22 @@ function renderEdit( props = {} ) {
 }
 
 describe( 'PlaylistTrackEdit', () => {
+	let updateBlockAttributes;
+
 	beforeEach( () => {
 		mockMediaReplaceFlowProps = undefined;
-		useDispatch.mockReturnValue( {
-			createErrorNotice: jest.fn(),
+		mockMediaUploadProps = [];
+		updateBlockAttributes = jest.fn();
+		useDispatch.mockImplementation( ( store ) => {
+			if ( store === blockEditorStore ) {
+				return { updateBlockAttributes };
+			}
+
+			return { createErrorNotice: jest.fn() };
+		} );
+		useSelect.mockReturnValue( {
+			selectedTrackClientIds: [],
+			selectedTracks: [],
 		} );
 		useUploadMediaFromBlobURL.mockClear();
 	} );
@@ -207,6 +225,112 @@ describe( 'PlaylistTrackEdit', () => {
 				src: 'https://example.com/replacement.mp3',
 				title: 'Replacement & Track',
 			} )
+		);
+	} );
+
+	it( 'allows artist and album to be edited for multiple selected tracks', () => {
+		const selectedTrackClientIds = [
+			'track-client-id-1',
+			'track-client-id-2',
+		];
+		useSelect.mockReturnValue( {
+			selectedTrackClientIds,
+			selectedTracks: [
+				{
+					clientId: 'track-client-id-1',
+					attributes: {
+						artist: 'The Artist',
+						album: 'Great Album',
+					},
+				},
+				{
+					clientId: 'track-client-id-2',
+					attributes: {
+						artist: 'The Artist',
+						album: 'Great Album',
+					},
+				},
+			],
+		} );
+
+		renderEdit( {
+			clientId: 'track-client-id-1',
+		} );
+
+		expect( screen.getByText( 'Selected tracks' ) ).toBeInTheDocument();
+
+		fireEvent.change( screen.getByLabelText( 'Artist' ), {
+			target: { value: 'Shared Artist' },
+		} );
+		fireEvent.change( screen.getByLabelText( 'Album' ), {
+			target: { value: 'Shared Album' },
+		} );
+
+		expect( updateBlockAttributes ).toHaveBeenCalledWith(
+			selectedTrackClientIds,
+			{ artist: 'Shared Artist' }
+		);
+		expect( updateBlockAttributes ).toHaveBeenCalledWith(
+			selectedTrackClientIds,
+			{ album: 'Shared Album' }
+		);
+		expect( screen.queryByLabelText( 'Title' ) ).not.toBeInTheDocument();
+	} );
+
+	it( 'allows track images to be edited for multiple selected tracks', () => {
+		const selectedTrackClientIds = [
+			'track-client-id-1',
+			'track-client-id-2',
+		];
+		useSelect.mockReturnValue( {
+			selectedTrackClientIds,
+			selectedTracks: [
+				{
+					clientId: 'track-client-id-1',
+					attributes: {
+						image: 'https://example.com/old-cover.jpg',
+						imageAlt: 'Old cover',
+					},
+				},
+				{
+					clientId: 'track-client-id-2',
+					attributes: {
+						image: 'https://example.com/old-cover.jpg',
+						imageAlt: 'Old cover',
+					},
+				},
+			],
+		} );
+
+		renderEdit( {
+			clientId: 'track-client-id-1',
+		} );
+
+		mockMediaUploadProps[ 0 ].onSelect( {
+			url: 'https://example.com/new-cover.jpg',
+			alt: 'New cover',
+		} );
+
+		expect( updateBlockAttributes ).toHaveBeenCalledWith(
+			selectedTrackClientIds,
+			{
+				image: 'https://example.com/new-cover.jpg',
+				imageAlt: 'New cover',
+			}
+		);
+
+		fireEvent.click(
+			screen.getByRole( 'button', {
+				name: 'Remove',
+			} )
+		);
+
+		expect( updateBlockAttributes ).toHaveBeenCalledWith(
+			selectedTrackClientIds,
+			{
+				image: undefined,
+				imageAlt: undefined,
+			}
 		);
 	} );
 } );
