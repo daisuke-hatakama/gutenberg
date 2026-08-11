@@ -71,6 +71,7 @@
       - onValueChange
       - render
       - required
+      - role
       - showOutsideDays
       - startMonth
       - style
@@ -776,6 +777,7 @@
       - onValueChange
       - render
       - required
+      - role
       - showOutsideDays
       - startMonth
       - style

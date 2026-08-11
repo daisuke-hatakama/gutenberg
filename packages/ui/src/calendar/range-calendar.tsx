@@ -142,18 +142,19 @@ export const RangeCalendar = forwardRef< HTMLDivElement, RangeCalendarProps >(
 			locale = enUS,
 			timeZone,
 			render,
-			role = 'group',
+			role = 'application',
 			'aria-label': ariaLabel,
 			labels: customLabels,
 			...props
 		},
 		ref
 	) {
-		const localizationProps = useLocalizationProps( {
-			locale,
-			timeZone,
-			mode: 'range',
-		} );
+		const { 'aria-label': defaultAriaLabel, ...localizationProps } =
+			useLocalizationProps( {
+				locale,
+				timeZone,
+				mode: 'range',
+			} );
 
 		const labels = useMemo(
 			() =>
@@ -162,12 +163,6 @@ export const RangeCalendar = forwardRef< HTMLDivElement, RangeCalendarProps >(
 					: localizationProps.labels,
 			[ localizationProps.labels, customLabels ]
 		);
-		const rootAriaLabel =
-			ariaLabel ??
-			( role === 'group' || role === 'application'
-				? localizationProps[ 'aria-label' ]
-				: undefined );
-
 		const onChange: OnValueChangeHandler< DateRange | null | undefined > =
 			useCallback(
 				( selected, triggerDate, modifiers, e ) => {
@@ -212,8 +207,14 @@ export const RangeCalendar = forwardRef< HTMLDivElement, RangeCalendarProps >(
 		}, [ previewRange ] );
 
 		const rootContextValue = useMemo(
-			() => ( { render, ref, role } ),
-			[ render, ref, role ]
+			() => ( {
+				render,
+				ref,
+				role,
+				defaultAriaLabel,
+				localeCode: locale.code,
+			} ),
+			[ render, ref, role, defaultAriaLabel, locale.code ]
 		);
 
 		return (
@@ -222,7 +223,7 @@ export const RangeCalendar = forwardRef< HTMLDivElement, RangeCalendarProps >(
 					{ ...COMMON_PROPS }
 					{ ...localizationProps }
 					{ ...props }
-					aria-label={ rootAriaLabel }
+					aria-label={ ariaLabel }
 					mode="range"
 					numberOfMonths={ clampNumberOfMonths( numberOfMonths ) }
 					disabled={ disabled }

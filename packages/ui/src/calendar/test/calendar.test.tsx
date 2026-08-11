@@ -110,7 +110,9 @@ describe( 'Calendar', () => {
 			render( <Calendar /> );
 
 			expect(
-				screen.getByRole( 'group', { name: 'Date calendar' } )
+				screen.getByRole( 'application', {
+					name: 'Date calendar, May 2025',
+				} )
 			).toBeVisible();
 
 			const tableGrid = screen.getByRole( 'grid', {
@@ -129,6 +131,11 @@ describe( 'Calendar', () => {
 
 		it( 'should show multiple months at once via the `numberOfMonths` prop', () => {
 			render( <Calendar numberOfMonths={ 2 } /> );
+			expect(
+				screen.getByRole( 'application', {
+					name: 'Date calendar, May 2025 and June 2025',
+				} )
+			).toBeVisible();
 
 			const grids = screen.getAllByRole( 'grid' );
 			expect( grids ).toHaveLength( 2 );
@@ -911,7 +918,9 @@ describe( 'Calendar', () => {
 
 			// Check computed writing direction
 			expect(
-				screen.getByRole( 'group', { name: 'Date calendar' } )
+				screen.getByRole( 'application', {
+					name: /^Date calendar,/,
+				} )
 			).toHaveAttribute( 'dir', 'rtl' );
 
 			// Check month name

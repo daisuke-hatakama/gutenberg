@@ -1,8 +1,14 @@
 import { useRender } from '@base-ui/react';
-import type { CalendarDay, RootProps, ChevronProps } from 'react-day-picker';
+import {
+	useDayPicker,
+	type CalendarDay,
+	type RootProps,
+	type ChevronProps,
+} from 'react-day-picker';
 import { useContext } from '@wordpress/element';
 import { useMergeRefs } from '@wordpress/compose';
 import { chevronLeft, chevronRight } from '@wordpress/icons';
+import { __, sprintf } from '@wordpress/i18n';
 import { Button } from '../../button';
 import { Icon } from '../../icon';
 import { RootContext } from './root-context';
@@ -141,7 +147,34 @@ export function Day(
  * @see https://daypicker.dev/guides/custom-components
  */
 export function Root( { rootRef, ...props }: RootProps ) {
-	const { render, ref, role } = useContext( RootContext );
+	const { render, ref, role, defaultAriaLabel, localeCode } =
+		useContext( RootContext );
+	const { months, labels } = useDayPicker();
+	const hasExplicitLabel =
+		props[ 'aria-label' ] !== undefined ||
+		props[ 'aria-labelledby' ] !== undefined;
+	let ariaLabel = props[ 'aria-label' ];
+
+	if ( ! hasExplicitLabel && defaultAriaLabel ) {
+		if ( role === 'application' ) {
+			const displayedMonthLabels = months
+				.map( ( month ) => labels.labelGrid( month.date ) )
+				.filter( Boolean );
+
+			ariaLabel = displayedMonthLabels.length
+				? sprintf(
+						// translators: 1: Calendar type. 2: List of displayed months.
+						__( '%1$s, %2$s' ),
+						defaultAriaLabel,
+						new Intl.ListFormat( localeCode, {
+							type: 'conjunction',
+						} ).format( displayedMonthLabels )
+				  )
+				: defaultAriaLabel;
+		} else if ( role === 'group' ) {
+			ariaLabel = defaultAriaLabel;
+		}
+	}
 
 	// `rootRef` is only set by `react-day-picker` when `animate` is enabled.
 	const mergedRef = useMergeRefs( [ rootRef ?? null, ref ?? null ] );
@@ -150,7 +183,7 @@ export function Root( { rootRef, ...props }: RootProps ) {
 		render,
 		defaultTagName: 'div',
 		ref: mergedRef,
-		props: { ...props, role },
+		props: { ...props, role, 'aria-label': ariaLabel },
 	} );
 }
 
