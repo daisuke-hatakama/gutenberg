@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Enhancements
+
+-   Export `getGlobalStylesChangelist`, which returns the changed styles as translated labels grouped by type ([#81373](https://github.com/WordPress/gutenberg/pull/81373)).
+
 ### Bug Fixes
 
 -   Render block element styles defined only inside responsive viewport states.
