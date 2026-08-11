@@ -110,7 +110,7 @@ describe( 'Calendar', () => {
 			render( <Calendar /> );
 
 			expect(
-				screen.getByRole( 'application', { name: 'Date calendar' } )
+				screen.getByRole( 'group', { name: 'Date calendar' } )
 			).toBeVisible();
 
 			const tableGrid = screen.getByRole( 'grid', {
@@ -911,7 +911,7 @@ describe( 'Calendar', () => {
 
 			// Check computed writing direction
 			expect(
-				screen.getByRole( 'application', { name: 'Date calendar' } )
+				screen.getByRole( 'group', { name: 'Date calendar' } )
 			).toHaveAttribute( 'dir', 'rtl' );
 
 			// Check month name

@@ -141,7 +141,7 @@ export function Day(
  * @see https://daypicker.dev/guides/custom-components
  */
 export function Root( { rootRef, ...props }: RootProps ) {
-	const { render, ref } = useContext( RootContext );
+	const { render, ref, role } = useContext( RootContext );
 
 	// `rootRef` is only set by `react-day-picker` when `animate` is enabled.
 	const mergedRef = useMergeRefs( [ rootRef ?? null, ref ?? null ] );
@@ -150,7 +150,7 @@ export function Root( { rootRef, ...props }: RootProps ) {
 		render,
 		defaultTagName: 'div',
 		ref: mergedRef,
-		props,
+		props: { ...props, role },
 	} );
 }
 

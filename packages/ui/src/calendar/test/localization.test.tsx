@@ -91,7 +91,7 @@ describe( 'Calendar text direction fallback', () => {
 			render( <Calendar locale={ locale } /> );
 
 			expect(
-				screen.getByRole( 'application', { name: 'Date calendar' } )
+				screen.getByRole( 'group', { name: 'Date calendar' } )
 			).toHaveAttribute( 'dir', 'rtl' );
 		}
 	);
