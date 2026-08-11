@@ -147,8 +147,7 @@ export function Day(
  * @see https://daypicker.dev/guides/custom-components
  */
 export function Root( { rootRef, ...props }: RootProps ) {
-	const { render, ref, role, defaultAriaLabel, localeCode } =
-		useContext( RootContext );
+	const { render, ref, role, defaultAriaLabel } = useContext( RootContext );
 	const { months, labels } = useDayPicker();
 	const hasExplicitLabel =
 		props[ 'aria-label' ] !== undefined ||
@@ -157,18 +156,13 @@ export function Root( { rootRef, ...props }: RootProps ) {
 
 	if ( ! hasExplicitLabel && defaultAriaLabel ) {
 		if ( role === 'application' ) {
-			const displayedMonthLabels = months
-				.map( ( month ) => labels.labelGrid( month.date ) )
-				.filter( Boolean );
-
-			ariaLabel = displayedMonthLabels.length
+			const currentMonth = months[ 0 ];
+			ariaLabel = currentMonth
 				? sprintf(
-						// translators: 1: Calendar type. 2: List of displayed months.
+						// translators: 1: Calendar type. 2: Current month and year.
 						__( '%1$s, %2$s' ),
 						defaultAriaLabel,
-						new Intl.ListFormat( localeCode, {
-							type: 'conjunction',
-						} ).format( displayedMonthLabels )
+						labels.labelGrid( currentMonth.date )
 				  )
 				: defaultAriaLabel;
 		} else if ( role === 'group' ) {

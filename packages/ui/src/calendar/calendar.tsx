@@ -74,9 +74,8 @@ export const Calendar = forwardRef< HTMLDivElement, CalendarProps >(
 				ref,
 				role,
 				defaultAriaLabel,
-				localeCode: locale.code,
 			} ),
-			[ render, ref, role, defaultAriaLabel, locale.code ]
+			[ render, ref, role, defaultAriaLabel ]
 		);
 
 		return (

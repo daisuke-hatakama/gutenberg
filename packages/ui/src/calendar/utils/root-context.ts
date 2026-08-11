@@ -7,7 +7,6 @@ export type RootContextValue = {
 	ref?: Ref< HTMLDivElement >;
 	role?: ComponentProps< 'div' >[ 'role' ];
 	defaultAriaLabel?: string;
-	localeCode?: string;
 };
 
 /**

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { startOfDay } from 'date-fns';
-import { ckb, fr, ug } from 'date-fns/locale';
+import { ckb, ug } from 'date-fns/locale';
 import { Calendar, RangeCalendar } from '..';
 
 jest.mock( '@wordpress/i18n', () => {
@@ -17,9 +17,9 @@ jest.mock( '@wordpress/i18n', () => {
 } );
 
 describe.each( [
-	[ 'Calendar', Calendar, 'Date calendar' ],
-	[ 'RangeCalendar', RangeCalendar, 'Date range calendar' ],
-] as const )( '%s localization', ( _name, Component, defaultLabel ) => {
+	[ 'Calendar', Calendar ],
+	[ 'RangeCalendar', RangeCalendar ],
+] as const )( '%s localization', ( _name, Component ) => {
 	it( 'should preserve localized defaults when overriding one label', () => {
 		render(
 			<Component labels={ { labelNext: () => 'Custom next month' } } />
@@ -31,22 +31,6 @@ describe.each( [
 		expect(
 			screen.getByRole( 'button', {
 				name: 'Translated previous month',
-			} )
-		).toBeVisible();
-	} );
-
-	it( 'should localize the displayed months in the default application label', () => {
-		render(
-			<Component
-				defaultMonth={ new Date( 2025, 4, 1 ) }
-				locale={ fr }
-				numberOfMonths={ 2 }
-			/>
-		);
-
-		expect(
-			screen.getByRole( 'application', {
-				name: `${ defaultLabel }, mai 2025 et juin 2025`,
 			} )
 		).toBeVisible();
 	} );
