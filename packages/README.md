@@ -366,6 +366,8 @@ Both extend shared base configurations (comments are not necessary):
 
 A migrated package registers both projects at the root: `packages/<name>/tsconfig.build.json` in the root `tsconfig.build.json` references, and `packages/<name>` in the root `tsconfig.json` references.
 
+Packages whose components feed the Storybook components manifest (`components`, `dataviews`, `ui`) carry a third project, `tsconfig.stories.json`, also registered in the root `tsconfig.json`. Storybook's component meta extractor reads props from component sources in the story's TypeScript project, and the dev project only sees them as declarations, so this project holds stories and component sources together, without jest types.
+
 Ambient types used only by dev files (`@types/jest`, `@types/node`, `@testing-library/jest-dom`) belong in the package's own `devDependencies`, listed via `types` in the dev project, so jest globals do not apply to `src`.
 
 Type declarations will be produced in the `build-types` which should be included in the published package.
