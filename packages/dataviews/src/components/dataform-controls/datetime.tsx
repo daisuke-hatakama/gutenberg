@@ -74,13 +74,11 @@ function CalendarDateTimeControl< Item >( {
 				// Extract the date part in WP timezone from the calendar selection
 				const wpDate = dateI18n( 'Y-m-d', newDate );
 
-				// Preserve time if it exists in current value, otherwise use current time
-				let wpTime: string;
-				if ( value ) {
-					wpTime = dateI18n( 'H:i', getDate( value ) );
-				} else {
-					wpTime = dateI18n( 'H:i', newDate );
-				}
+				// Preserve the time from the current value; a value set for the
+				// first time starts at the beginning of the day.
+				const wpTime = value
+					? dateI18n( 'H:i', getDate( value ) )
+					: '00:00';
 
 				// Combine date and time in WP timezone and convert to ISO
 				const finalDateTime = getDate( `${ wpDate }T${ wpTime }` );
@@ -143,9 +141,13 @@ function CalendarDateTimeControl< Item >( {
 	const weekStartsOn =
 		( fieldFormat as FormatDatetime ).weekStartsOn ??
 		getSettings().l10n.startOfWeek;
-	const {
-		timezone: { string: timezoneString },
-	} = getSettings();
+	const { timezone } = getSettings();
+	// A site configured with a manual UTC offset reports no named timezone —
+	// without one the calendar falls back to the browser's, whose days shift
+	// onto an adjacent day whenever the two timezones disagree on the date —
+	// so the offset itself is passed, rendered by the PHP `P` format as the
+	// `±HH:MM` shape the calendar accepts.
+	const timeZone = timezone.string || dateI18n( 'P' );
 
 	let displayLabel = label;
 	if ( isValid?.required && ! markWhenOptional && ! hideLabelFromVision ) {
@@ -196,7 +198,7 @@ function CalendarDateTimeControl< Item >( {
 						onValueChange={ onSelectDate }
 						month={ calendarMonth }
 						onMonthChange={ setCalendarMonth }
-						timeZone={ timezoneString || undefined }
+						timeZone={ timeZone }
 						weekStartsOn={ weekStartsOn }
 						disabled={ disabled || disabledMatchers }
 					/>
