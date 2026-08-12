@@ -7,6 +7,7 @@
 ### Enhancements
 
 -   `ComplementaryArea`: Add a `render` prop to replace the default container element with a given React element ([#81054](https://github.com/WordPress/gutenberg/pull/81054)).
+-   `ComplementaryAreaMoreMenuItem`: Forward the ref to the underlying `MenuItem`, so that the item can be rendered by a menu that manages its own items.
 
 ### Bug Fixes
 

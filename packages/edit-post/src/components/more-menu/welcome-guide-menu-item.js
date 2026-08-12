@@ -1,7 +1,12 @@
 import { useSelect } from '@wordpress/data';
-import { PreferenceToggleMenuItem } from '@wordpress/preferences';
+import {
+	privateApis as editorPrivateApis,
+	store as editorStore,
+} from '@wordpress/editor';
 import { __ } from '@wordpress/i18n';
-import { store as editorStore } from '@wordpress/editor';
+import { unlock } from '../../lock-unlock';
+
+const { MoreMenuPreferenceItem } = unlock( editorPrivateApis );
 
 export default function WelcomeGuideMenuItem() {
 	const isEditingTemplate = useSelect(
@@ -11,7 +16,7 @@ export default function WelcomeGuideMenuItem() {
 	);
 
 	return (
-		<PreferenceToggleMenuItem
+		<MoreMenuPreferenceItem
 			scope="core/edit-post"
 			name={ isEditingTemplate ? 'welcomeGuideTemplate' : 'welcomeGuide' }
 			label={ __( 'Welcome Guide' ) }

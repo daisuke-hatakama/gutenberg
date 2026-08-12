@@ -1,6 +1,6 @@
-import { MenuItem } from '@wordpress/components';
 import { usePluginContext } from '@wordpress/plugins';
 import { ActionItem } from '@wordpress/interface';
+import MoreMenuItem from '../more-menu/more-menu-item';
 
 /**
  * Renders a menu item in `Plugins` group in `More Menu` drop down, and can be used to as a button or link depending on the props provided.
@@ -11,7 +11,7 @@ import { ActionItem } from '@wordpress/interface';
  * @param {string}                [props.href]                          When `href` is provided then the menu item is represented as an anchor rather than button. It corresponds to the `href` attribute of the anchor.
  * @param {WPBlockTypeIconRender} [props.icon=inherits from the plugin] The [Dashicon](https://developer.wordpress.org/resource/dashicons/) icon slug string, or an SVG WP element, to be rendered to the left of the menu item label.
  * @param {Function}              [props.onClick=noop]                  The callback function to be executed when the user clicks the menu item.
- * @param {...*}                  [props.other]                         Any additional props are passed through to the underlying [Button](/packages/components/src/button/README.md) component.
+ * @param {...*}                  [props.other]                         Any additional props are passed through to the underlying menu item.
  *
  * @example
  * ```js
@@ -64,7 +64,7 @@ export default function PluginMoreMenuItem( props ) {
 	return (
 		<ActionItem
 			name="core/plugin-more-menu"
-			as={ props.as ?? MenuItem }
+			as={ props.as ?? MoreMenuItem }
 			icon={ props.icon || context.icon }
 			{ ...props }
 		/>

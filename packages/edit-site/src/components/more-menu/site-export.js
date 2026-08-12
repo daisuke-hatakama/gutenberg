@@ -1,11 +1,14 @@
 import { __, _x } from '@wordpress/i18n';
-import { MenuItem } from '@wordpress/components';
 import apiFetch from '@wordpress/api-fetch';
 import { download } from '@wordpress/icons';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { downloadBlob } from '@wordpress/blob';
 import { store as coreStore } from '@wordpress/core-data';
+import { privateApis as editorPrivateApis } from '@wordpress/editor';
 import { store as noticesStore } from '@wordpress/notices';
+import { unlock } from '../../lock-unlock';
+
+const { MoreMenuItem } = unlock( editorPrivateApis );
 
 export default function SiteExport() {
 	const canExport = useSelect( ( select ) => {
@@ -57,8 +60,7 @@ export default function SiteExport() {
 	}
 
 	return (
-		<MenuItem
-			role="menuitem"
+		<MoreMenuItem
 			icon={ download }
 			onClick={ handleExport }
 			info={ __(
@@ -66,6 +68,6 @@ export default function SiteExport() {
 			) }
 		>
 			{ _x( 'Export', 'site exporter menu item' ) }
-		</MenuItem>
+		</MoreMenuItem>
 	);
 }

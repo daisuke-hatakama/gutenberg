@@ -1,16 +1,22 @@
 import { check } from '@wordpress/icons';
 import { MenuItem } from '@wordpress/components';
+import { forwardRef } from '@wordpress/element';
 import ComplementaryAreaToggle from '../complementary-area-toggle';
 import ActionItem from '../action-item';
 
-const PluginsMenuItem = ( {
-	// Menu item is marked with unstable prop for backward compatibility.
-	// They are removed so they don't leak to DOM elements.
-	// @see https://github.com/WordPress/gutenberg/issues/14457
-	__unstableExplicitMenuItem,
-	__unstableTarget,
-	...restProps
-} ) => <MenuItem { ...restProps } />;
+const PluginsMenuItem = forwardRef( function UnforwardedPluginsMenuItem(
+	{
+		// Menu item is marked with unstable prop for backward compatibility.
+		// They are removed so they don't leak to DOM elements.
+		// @see https://github.com/WordPress/gutenberg/issues/14457
+		__unstableExplicitMenuItem,
+		__unstableTarget,
+		...restProps
+	},
+	ref
+) {
+	return <MenuItem { ...restProps } ref={ ref } />;
+} );
 
 export default function ComplementaryAreaMoreMenuItem( {
 	scope,
