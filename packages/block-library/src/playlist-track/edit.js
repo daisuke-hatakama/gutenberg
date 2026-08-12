@@ -42,12 +42,138 @@ function getSharedTrackAttribute( tracks, attribute ) {
 		return '';
 	}
 
-	const firstValue = tracks[ 0 ].attributes[ attribute ] || '';
+	const firstValue = tracks[ 0 ]?.attributes?.[ attribute ] || '';
 	const hasSharedValue = tracks.every(
-		( track ) => ( track.attributes[ attribute ] || '' ) === firstValue
+		( track ) => ( track.attributes?.[ attribute ] || '' ) === firstValue
 	);
 
 	return hasSharedValue ? firstValue : '';
+}
+
+function TrackImageControl( {
+	image,
+	hasImage,
+	imageAlt,
+	onSelectImage,
+	onRemoveImage,
+	onChangeImageAlt,
+	imageButtonRef,
+} ) {
+	return (
+		<>
+			<MediaUploadCheck>
+				<BaseControl>
+					<BaseControl.VisualLabel>
+						{ __( 'Track image' ) }
+					</BaseControl.VisualLabel>
+					<div className="editor-video-poster-control">
+						{ !! image && (
+							<img
+								src={ image }
+								alt={ __( 'Preview of the track image' ) }
+							/>
+						) }
+						<MediaUpload
+							title={ __( 'Select image' ) }
+							onSelect={ onSelectImage }
+							allowedTypes={ TRACK_IMAGE_ALLOWED_MEDIA_TYPES }
+							render={ ( { open } ) => (
+								<Button
+									__next40pxDefaultSize
+									variant="primary"
+									onClick={ open }
+									ref={ imageButtonRef }
+								>
+									{ ! hasImage
+										? __( 'Select' )
+										: __( 'Replace' ) }
+								</Button>
+							) }
+						/>
+						{ hasImage && (
+							<Button
+								__next40pxDefaultSize
+								onClick={ onRemoveImage }
+								variant="tertiary"
+							>
+								{ __( 'Remove' ) }
+							</Button>
+						) }
+					</div>
+				</BaseControl>
+			</MediaUploadCheck>
+			{ hasImage && (
+				<TextareaControl
+					label={ __( 'Alternative text' ) }
+					value={ imageAlt }
+					onChange={ onChangeImageAlt }
+					help={
+						<Link
+							openInNewTab
+							href={
+								// translators: Localized tutorial, if one exists. W3C Web Accessibility Initiative link has list of existing translations.
+								__(
+									'https://www.w3.org/WAI/tutorials/images/decision-tree/'
+								)
+							}
+						>
+							{ __( 'Describe the purpose of the image.' ) }
+						</Link>
+					}
+				/>
+			) }
+		</>
+	);
+}
+
+function TrackInspectorControls( {
+	panelTitle,
+	artist,
+	onChangeArtist,
+	album,
+	onChangeAlbum,
+	title,
+	onChangeTitle,
+	image,
+	hasImage,
+	imageAlt,
+	onSelectImage,
+	onRemoveImage,
+	onChangeImageAlt,
+	imageButtonRef,
+} ) {
+	return (
+		<InspectorControls>
+			<PanelBody title={ panelTitle }>
+				{ onChangeTitle && (
+					<TextControl
+						label={ __( 'Title' ) }
+						value={ stripHTML( title || '' ) }
+						onChange={ onChangeTitle }
+					/>
+				) }
+				<TextControl
+					label={ __( 'Artist' ) }
+					value={ stripHTML( artist || '' ) }
+					onChange={ onChangeArtist }
+				/>
+				<TextControl
+					label={ __( 'Album' ) }
+					value={ stripHTML( album || '' ) }
+					onChange={ onChangeAlbum }
+				/>
+				<TrackImageControl
+					image={ image }
+					hasImage={ hasImage }
+					imageAlt={ imageAlt }
+					onSelectImage={ onSelectImage }
+					onRemoveImage={ onRemoveImage }
+					onChangeImageAlt={ onChangeImageAlt }
+					imageButtonRef={ imageButtonRef }
+				/>
+			</PanelBody>
+		</InspectorControls>
+	);
 }
 
 const PlaylistTrackEdit = ( {
@@ -115,7 +241,23 @@ const PlaylistTrackEdit = ( {
 	const isEditingSelectedTracks =
 		hasSelectedTracks && selectedTrackClientIds[ 0 ] === clientId;
 	const selectedTracksHaveImage = selectedTracks.some(
-		( track ) => !! track.attributes.image
+		( track ) => !! track.attributes?.image
+	);
+	const selectedTrackArtist = getSharedTrackAttribute(
+		selectedTracks,
+		'artist'
+	);
+	const selectedTrackAlbum = getSharedTrackAttribute(
+		selectedTracks,
+		'album'
+	);
+	const selectedTrackImage = getSharedTrackAttribute(
+		selectedTracks,
+		'image'
+	);
+	const selectedTrackImageAlt = getSharedTrackAttribute(
+		selectedTracks,
+		'imageAlt'
 	);
 
 	useEffect( () => {
@@ -246,210 +388,48 @@ const PlaylistTrackEdit = ( {
 				/>
 			</BlockControls>
 			{ isEditingSelectedTracks && (
-				<InspectorControls>
-					<PanelBody title={ __( 'Selected tracks' ) }>
-						<TextControl
-							label={ __( 'Artist' ) }
-							value={ stripHTML(
-								getSharedTrackAttribute(
-									selectedTracks,
-									'artist'
-								)
-							) }
-							onChange={ updateSelectedTracksAttribute(
-								'artist'
-							) }
-						/>
-						<TextControl
-							label={ __( 'Album' ) }
-							value={ stripHTML(
-								getSharedTrackAttribute(
-									selectedTracks,
-									'album'
-								)
-							) }
-							onChange={ updateSelectedTracksAttribute(
-								'album'
-							) }
-						/>
-						<MediaUploadCheck>
-							<BaseControl>
-								<BaseControl.VisualLabel>
-									{ __( 'Track image' ) }
-								</BaseControl.VisualLabel>
-								<div className="editor-video-poster-control">
-									{ !! getSharedTrackAttribute(
-										selectedTracks,
-										'image'
-									) && (
-										<img
-											src={ getSharedTrackAttribute(
-												selectedTracks,
-												'image'
-											) }
-											alt={ __(
-												'Preview of the track image'
-											) }
-										/>
-									) }
-									<MediaUpload
-										title={ __( 'Select image' ) }
-										onSelect={ onSelectSelectedTrackImage }
-										allowedTypes={
-											TRACK_IMAGE_ALLOWED_MEDIA_TYPES
-										}
-										render={ ( { open } ) => (
-											<Button
-												__next40pxDefaultSize
-												variant="primary"
-												onClick={ open }
-												ref={ imageButton }
-											>
-												{ ! selectedTracksHaveImage
-													? __( 'Select' )
-													: __( 'Replace' ) }
-											</Button>
-										) }
-									/>
-									{ selectedTracksHaveImage && (
-										<Button
-											__next40pxDefaultSize
-											onClick={
-												onRemoveSelectedTrackImage
-											}
-											variant="tertiary"
-										>
-											{ __( 'Remove' ) }
-										</Button>
-									) }
-								</div>
-							</BaseControl>
-						</MediaUploadCheck>
-						{ selectedTracksHaveImage && (
-							<TextareaControl
-								label={ __( 'Alternative text' ) }
-								value={ getSharedTrackAttribute(
-									selectedTracks,
-									'imageAlt'
-								) }
-								onChange={ updateSelectedTracksAttribute(
-									'imageAlt'
-								) }
-								help={
-									<Link
-										openInNewTab
-										href={
-											// translators: Localized tutorial, if one exists. W3C Web Accessibility Initiative link has list of existing translations.
-											__(
-												'https://www.w3.org/WAI/tutorials/images/decision-tree/'
-											)
-										}
-									>
-										{ __(
-											'Describe the purpose of the image.'
-										) }
-									</Link>
-								}
-							/>
-						) }
-					</PanelBody>
-				</InspectorControls>
+				<TrackInspectorControls
+					panelTitle={ __( 'Selected tracks' ) }
+					artist={ selectedTrackArtist }
+					onChangeArtist={ updateSelectedTracksAttribute( 'artist' ) }
+					album={ selectedTrackAlbum }
+					onChangeAlbum={ updateSelectedTracksAttribute( 'album' ) }
+					image={ selectedTrackImage }
+					hasImage={ selectedTracksHaveImage }
+					imageAlt={ selectedTrackImageAlt }
+					onSelectImage={ onSelectSelectedTrackImage }
+					onRemoveImage={ onRemoveSelectedTrackImage }
+					onChangeImageAlt={ updateSelectedTracksAttribute(
+						'imageAlt'
+					) }
+					imageButtonRef={ imageButton }
+				/>
 			) }
 			{ ! hasSelectedTracks && (
-				<InspectorControls>
-					<PanelBody title={ __( 'Settings' ) }>
-						<TextControl
-							label={ __( 'Artist' ) }
-							value={ artist ? stripHTML( artist ) : '' }
-							onChange={ ( artistValue ) => {
-								setAttributes( { artist: artistValue } );
-							} }
-						/>
-						<TextControl
-							label={ __( 'Album' ) }
-							value={ album ? stripHTML( album ) : '' }
-							onChange={ ( albumValue ) => {
-								setAttributes( { album: albumValue } );
-							} }
-						/>
-						<TextControl
-							label={ __( 'Title' ) }
-							value={ title ? stripHTML( title ) : '' }
-							onChange={ ( titleValue ) => {
-								setAttributes( { title: titleValue } );
-							} }
-						/>
-						<MediaUploadCheck>
-							<BaseControl>
-								<BaseControl.VisualLabel>
-									{ __( 'Track image' ) }
-								</BaseControl.VisualLabel>
-								<div className="editor-video-poster-control">
-									{ !! image && (
-										<img
-											src={ image }
-											alt={ __(
-												'Preview of the track image'
-											) }
-										/>
-									) }
-									<MediaUpload
-										title={ __( 'Select image' ) }
-										onSelect={ onSelectTrackImage }
-										allowedTypes={
-											TRACK_IMAGE_ALLOWED_MEDIA_TYPES
-										}
-										render={ ( { open } ) => (
-											<Button
-												__next40pxDefaultSize
-												variant="primary"
-												onClick={ open }
-												ref={ imageButton }
-											>
-												{ ! image
-													? __( 'Select' )
-													: __( 'Replace' ) }
-											</Button>
-										) }
-									/>
-									{ !! image && (
-										<Button
-											__next40pxDefaultSize
-											onClick={ onRemoveTrackImage }
-											variant="tertiary"
-										>
-											{ __( 'Remove' ) }
-										</Button>
-									) }
-								</div>
-							</BaseControl>
-						</MediaUploadCheck>
-						{ !! image && (
-							<TextareaControl
-								label={ __( 'Alternative text' ) }
-								value={ imageAlt || '' }
-								onChange={ ( value ) =>
-									setAttributes( { imageAlt: value } )
-								}
-								help={
-									<Link
-										openInNewTab
-										href={
-											// translators: Localized tutorial, if one exists. W3C Web Accessibility Initiative link has list of existing translations.
-											__(
-												'https://www.w3.org/WAI/tutorials/images/decision-tree/'
-											)
-										}
-									>
-										{ __(
-											'Describe the purpose of the image.'
-										) }
-									</Link>
-								}
-							/>
-						) }
-					</PanelBody>
-				</InspectorControls>
+				<TrackInspectorControls
+					panelTitle={ __( 'Settings' ) }
+					artist={ artist }
+					onChangeArtist={ ( artistValue ) => {
+						setAttributes( { artist: artistValue } );
+					} }
+					album={ album }
+					onChangeAlbum={ ( albumValue ) => {
+						setAttributes( { album: albumValue } );
+					} }
+					title={ title }
+					onChangeTitle={ ( titleValue ) => {
+						setAttributes( { title: titleValue } );
+					} }
+					image={ image }
+					hasImage={ !! image }
+					imageAlt={ imageAlt || '' }
+					onSelectImage={ onSelectTrackImage }
+					onRemoveImage={ onRemoveTrackImage }
+					onChangeImageAlt={ ( value ) =>
+						setAttributes( { imageAlt: value } )
+					}
+					imageButtonRef={ imageButton }
+				/>
 			) }
 			<li { ...blockProps }>
 				{ !! temporaryURL && <Spinner /> }
