@@ -15,6 +15,7 @@
 
 ### Enhancements
 
+-   Show separate horizontal and vertical block spacing controls in the block inspector only for Flex and Grid layouts, while retaining axial gap support in Global Styles. Responsive Grid column calculations use the horizontal gap, while Flow and Constrained layouts use the vertical gap when receiving an axial value.
 -   Creating a new block next to a sibling of the same type now inherits the sibling's attributes consistently, whether it is created by the appender, the inserter, or Enter at the edge of the text. Everything except the sibling's content (attributes with the `content` role) and its `metadata` is copied. The `attributesToCopy` list of a default block is removed: the copied attributes derive from the block's attribute roles.
 
 ### Enhancements
