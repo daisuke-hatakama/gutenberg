@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 import PlaylistTrackEdit from '../edit';
@@ -21,7 +21,11 @@ jest.mock( '@wordpress/block-editor', () => ( {
 	},
 	MediaUpload: ( props ) => {
 		mockMediaUploadProps.push( props );
-		return props.render( { open: jest.fn() } );
+		return (
+			<div data-testid="media-upload">
+				{ props.render( { open: jest.fn() } ) }
+			</div>
+		);
 	},
 	MediaUploadCheck: ( { children } ) => <div>{ children }</div>,
 	PlainText: ( {
@@ -306,6 +310,14 @@ describe( 'PlaylistTrackEdit', () => {
 			clientId: 'track-client-id-1',
 		} );
 
+		const trackImageUpload = screen.getByTestId( 'media-upload' );
+		const replaceTrackImageButton = within( trackImageUpload ).getByRole(
+			'button',
+			{
+				name: 'Replace',
+			}
+		);
+
 		mockMediaUploadProps[ 0 ].onSelect( {
 			url: 'https://example.com/new-cover.jpg',
 			alt: 'New cover',
@@ -332,5 +344,6 @@ describe( 'PlaylistTrackEdit', () => {
 				imageAlt: undefined,
 			}
 		);
+		expect( replaceTrackImageButton ).toHaveFocus();
 	} );
 } );

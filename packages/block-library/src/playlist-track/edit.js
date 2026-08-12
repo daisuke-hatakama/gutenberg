@@ -32,6 +32,10 @@ import { useUploadMediaFromBlobURL } from '../utils/hooks';
 
 const ALLOWED_MEDIA_TYPES = [ 'audio' ];
 const TRACK_IMAGE_ALLOWED_MEDIA_TYPES = [ 'image' ];
+const EMPTY_SELECTED_TRACKS = {
+	selectedTrackClientIds: [],
+	selectedTracks: [],
+};
 
 function getSharedTrackAttribute( tracks, attribute ) {
 	if ( tracks.length === 0 ) {
@@ -67,19 +71,16 @@ const PlaylistTrackEdit = ( {
 	const { selectedTrackClientIds, selectedTracks } = useSelect(
 		( select ) => {
 			const {
-				getBlock,
 				getBlockName,
 				getBlockRootClientId,
 				getMultiSelectedBlockClientIds,
+				getMultiSelectedBlocks,
 			} = select( blockEditorStore );
 			const multiSelectedClientIds = getMultiSelectedBlockClientIds();
 			const playlistClientId = getBlockRootClientId( clientId );
 
 			if ( multiSelectedClientIds.length <= 1 || ! playlistClientId ) {
-				return {
-					selectedTrackClientIds: [],
-					selectedTracks: [],
-				};
+				return EMPTY_SELECTED_TRACKS;
 			}
 
 			const isSelectingPlaylistTracks = multiSelectedClientIds.every(
@@ -91,17 +92,17 @@ const PlaylistTrackEdit = ( {
 			);
 
 			if ( ! isSelectingPlaylistTracks ) {
-				return {
-					selectedTrackClientIds: [],
-					selectedTracks: [],
-				};
+				return EMPTY_SELECTED_TRACKS;
+			}
+
+			const multiSelectedTracks = getMultiSelectedBlocks();
+			if ( multiSelectedTracks.some( ( track ) => ! track ) ) {
+				return EMPTY_SELECTED_TRACKS;
 			}
 
 			return {
 				selectedTrackClientIds: multiSelectedClientIds,
-				selectedTracks: multiSelectedClientIds
-					.map( getBlock )
-					.filter( Boolean ),
+				selectedTracks: multiSelectedTracks,
 			};
 		},
 		[ clientId ]
@@ -204,6 +205,9 @@ const PlaylistTrackEdit = ( {
 			image: undefined,
 			imageAlt: undefined,
 		} );
+
+		// Move focus back to the Media Upload button.
+		imageButton.current?.focus();
 	}
 
 	if ( ! hasTrackSource ) {
