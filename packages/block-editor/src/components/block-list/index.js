@@ -42,22 +42,23 @@ function Root( { className, ...settings } ) {
 		isPreviewMode,
 		editedContentOnlySection,
 	} = useSelect( ( select ) => {
-		const {
-			getSettings,
-			isTyping,
-			hasBlockSpotlight,
-			getEditedContentOnlySection,
-		} = unlock( select( blockEditorStore ) );
+		const { getSettings, isTyping, getEditedContentOnlySection } = unlock(
+			select( blockEditorStore )
+		);
 		const {
 			outlineMode,
 			focusMode,
 			isPreviewMode: _isPreviewMode,
 		} = getSettings();
+		const _editedContentOnlySection = getEditedContentOnlySection();
 		return {
 			isOutlineMode: outlineMode && ! isTyping(),
-			isFocusMode: focusMode || hasBlockSpotlight(),
+			// Editing a content-only section dims the rest of the canvas the
+			// same way the user preference does. Nothing else switches the
+			// fade on: notes mark their block with its outline instead.
+			isFocusMode: focusMode || !! _editedContentOnlySection,
 			isPreviewMode: _isPreviewMode,
-			editedContentOnlySection: getEditedContentOnlySection(),
+			editedContentOnlySection: _editedContentOnlySection,
 		};
 	}, [] );
 	const registry = useRegistry();
