@@ -1,4 +1,3 @@
-import { MenuItem } from '@wordpress/components';
 import { usePluginContext } from '@wordpress/plugins';
 import { ActionItem } from '@wordpress/interface';
 
@@ -64,7 +63,6 @@ export default function PluginMoreMenuItem( props ) {
 	return (
 		<ActionItem
 			name="core/plugin-more-menu"
-			as={ props.as ?? MenuItem }
 			icon={ props.icon || context.icon }
 			{ ...props }
 		/>
