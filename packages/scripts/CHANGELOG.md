@@ -667,6 +667,8 @@
 
 -   The bundled `@svgr/webpack` dependency has been updated from requiring `^5.2.0` to requiring `^5.5.0` ([#33818](https://github.com/WordPress/gutenberg/pull/33818)).
 -   The bundled `webpack-bundle-analyzer` dependency has been updated from requiring `^4.2.0` to requiring `^4.4.2` ([#33818](https://github.com/WordPress/gutenberg/pull/33818)).
+-   Update webpack config to minimize also CSS files ([#33676](https://github.com/WordPress/gutenberg/pull/33676)).
+-   The default PostCSS config uses cssnano to minimize CSS output ([#33750](https://github.com/WordPress/gutenberg/pull/33750)).
 
 ### Bug Fixes
 
@@ -678,8 +680,6 @@
 
 -   Update `eslint-plugin-markdown` package to `2.20.0` ([#33432](https://github.com/WordPress/gutenberg/pull/33432)).
 -   Update `sass` package to `1.35.2` ([#33433](https://github.com/WordPress/gutenberg/pull/33433)).
--   Update webpack config to minimize also CSS files ([#33676](https://github.com/WordPress/gutenberg/pull/33676)).
--   The default PostCSS config uses cssnano to minimize CSS output ([#33750](https://github.com/WordPress/gutenberg/pull/33750)).
 
 ## 17.0.0 (2021-07-21)
 
