@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Bug Fixes
+
+-   Media selected from a picker is now attached to the post it is added to, when it is not already attached to another post — matching what uploading into that post has always done ([#66663](https://github.com/WordPress/gutenberg/issues/66663)).
+-   `MediaUpload`: Preserve the attachment's parent post (`uploadedTo`) on selections passed through `onUpdate`, so the gallery edit and replace flows can tell an unattached item from one that already belongs to another post ([#66663](https://github.com/WordPress/gutenberg/issues/66663)).
 
 ## 5.52.0 (2026-07-29)
 
