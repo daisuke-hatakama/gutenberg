@@ -9,9 +9,11 @@
 ### New Features
 
 -   `ActionItem.Slot`: Accept a `children` render prop receiving the fills as a flat array, for containers that wrap each fill ([#81507](https://github.com/WordPress/gutenberg/pull/81507)).
+-   `ActionItem`: Take the component to render from the `as` the slot passes through `fillProps`, so that a menu can have its items render as its own ([#81507](https://github.com/WordPress/gutenberg/pull/81507)).
 
 ### Internal
 
+-   `ComplementaryAreaMoreMenuItem`: Stop passing a `selectedIcon`. The component the item renders as shows the selection ([#81507](https://github.com/WordPress/gutenberg/pull/81507)).
 -   `ActionItem.Slot`: Stop inspecting fills for `__unstableExplicitMenuItem` and `__unstableTarget`. `ComplementaryAreaMoreMenuItem` registers itself and `ComplementaryArea` leaves out the item it injects for the same area, so no duplicate is rendered ([#81507](https://github.com/WordPress/gutenberg/pull/81507)).
 
 ## 9.38.0 (2026-08-12)

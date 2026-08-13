@@ -4,7 +4,16 @@ import { forwardRef } from '@wordpress/element';
 import { Menu } from '@wordpress/ui';
 
 function UnforwardedMoreMenuItem(
-	{ children, icon, info, target, ...props },
+	{
+		'aria-checked': ariaChecked,
+		children,
+		icon,
+		info,
+		onClick,
+		role,
+		target,
+		...props
+	},
 	ref
 ) {
 	const content = info ? (
@@ -17,12 +26,30 @@ function UnforwardedMoreMenuItem(
 	);
 	const prefix = icon ? <WCIcon icon={ icon } size={ 24 } /> : undefined;
 
+	// Items toggling a sidebar of the plugins API describe themselves with the
+	// ARIA props of a checkable item.
+	if ( role === 'menuitemcheckbox' ) {
+		return (
+			<Menu.CheckboxItem
+				ref={ ref }
+				checked={ !! ariaChecked }
+				closeOnClick
+				onCheckedChange={ () => onClick() }
+				prefix={ prefix }
+				{ ...props }
+			>
+				{ content }
+			</Menu.CheckboxItem>
+		);
+	}
+
 	if ( props.href ) {
 		return (
 			<Menu.LinkItem
 				ref={ ref }
 				prefix={ prefix }
 				openInNewTab={ target === '_blank' }
+				onClick={ onClick }
 				{ ...props }
 			>
 				{ content }
@@ -31,7 +58,12 @@ function UnforwardedMoreMenuItem(
 	}
 
 	return (
-		<Menu.Item ref={ ref } prefix={ prefix } { ...props }>
+		<Menu.Item
+			ref={ ref }
+			prefix={ prefix }
+			onClick={ onClick }
+			{ ...props }
+		>
 			{ content }
 		</Menu.Item>
 	);

@@ -1,6 +1,5 @@
 import { __, _x } from '@wordpress/i18n';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { useState } from '@wordpress/element';
 import { Button } from '@wordpress/components';
 import { moreVertical } from '@wordpress/icons';
 import { store as preferencesStore } from '@wordpress/preferences';
@@ -8,8 +7,9 @@ import { store as interfaceStore, ActionItem } from '@wordpress/interface';
 // eslint-disable-next-line @wordpress/use-recommended-components
 import { Menu } from '@wordpress/ui';
 import CopyContentMenuItem from './copy-content-menu-item';
+import MoreMenuItem from './more-menu-item';
 import ModeSwitcher from '../mode-switcher';
-import PluginsMenuGroup from './plugins-menu-group';
+import MoreMenuGroup from './more-menu-group';
 import MoreMenuPreferenceItem from './more-menu-preference-item';
 import ToolsMoreMenuGroup from './tools-more-menu-group';
 import ViewMoreMenuGroup from './view-more-menu-group';
@@ -26,7 +26,6 @@ const KEYBOARD_SHORTCUTS_SHORTCUT = getKeyboardShortcut( {
 } );
 
 export default function MoreMenu( { isRevisionMode = false } ) {
-	const [ isOpen, setIsOpen ] = useState( false );
 	const { openModal } = useDispatch( interfaceStore );
 	const { set: setPreference } = useDispatch( preferencesStore );
 	const { toggleDistractionFree } = useDispatch( editorStore );
@@ -36,7 +35,6 @@ export default function MoreMenu( { isRevisionMode = false } ) {
 		[]
 	);
 
-	const onClose = () => setIsOpen( false );
 	const turnOffDistractionFree = () => {
 		setPreference( 'core', 'distractionFree', false );
 	};
@@ -59,7 +57,7 @@ export default function MoreMenu( { isRevisionMode = false } ) {
 
 	if ( isRevisionMode ) {
 		return (
-			<Menu.Root open={ isOpen } onOpenChange={ setIsOpen }>
+			<Menu.Root>
 				{ trigger }
 				<Menu.Popup
 					className="editor-more-menu__popup"
@@ -72,7 +70,7 @@ export default function MoreMenu( { isRevisionMode = false } ) {
 	}
 
 	return (
-		<Menu.Root open={ isOpen } onOpenChange={ setIsOpen }>
+		<Menu.Root>
 			{ trigger }
 			<Menu.Popup
 				className="editor-more-menu__popup"
@@ -118,16 +116,20 @@ export default function MoreMenu( { isRevisionMode = false } ) {
 							'Spotlight mode deactivated.'
 						) }
 					/>
-					<ViewMoreMenuGroup.Slot fillProps={ { onClose } } />
+					<ViewMoreMenuGroup.Slot />
 				</Menu.Group>
 				<Menu.Separator />
 				<ModeSwitcher />
 				<ActionItem.Slot
 					name="core/plugin-more-menu"
-					label={ __( 'Panels' ) }
-					as={ PluginsMenuGroup }
-					fillProps={ { onClick: onClose } }
-				/>
+					fillProps={ { as: MoreMenuItem } }
+				>
+					{ ( items ) => (
+						<MoreMenuGroup label={ __( 'Panels' ) }>
+							{ items }
+						</MoreMenuGroup>
+					) }
+				</ActionItem.Slot>
 				<Menu.Separator />
 				<Menu.Group>
 					<Menu.GroupLabel>{ __( 'Tools' ) }</Menu.GroupLabel>
@@ -148,7 +150,7 @@ export default function MoreMenu( { isRevisionMode = false } ) {
 					>
 						{ __( 'Help' ) }
 					</Menu.LinkItem>
-					<ToolsMoreMenuGroup.Slot fillProps={ { onClose } } />
+					<ToolsMoreMenuGroup.Slot />
 				</Menu.Group>
 				<Menu.Separator />
 				<Menu.Item onClick={ () => openModal( 'editor/preferences' ) }>

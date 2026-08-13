@@ -34,13 +34,16 @@ function ActionItemSlot( {
 	);
 }
 
-function ActionItem( { name, as: Component = MenuItem, onClick, ...props } ) {
+function ActionItem( { name, as, onClick, ...props } ) {
 	return (
 		<Fill name={ name }>
-			{ ( { onClick: slotOnClick } ) => {
-				// The slot passes a handler of its own through `fillProps`, for
-				// example to close the menu the item lives in. It runs
-				// alongside the item's `onClick`, not instead of it.
+			{ ( { as: slotAs = MenuItem, onClick: slotOnClick } ) => {
+				// The slot provides the component to render the item with, so
+				// that it fits the menu it ends up in, and an onClick handler,
+				// for example one that closes that menu. The `as` prop
+				// replaces the component. The `onClick` prop does not replace
+				// the handler: both run.
+				const Component = as ?? slotAs;
 				const handlers = [ onClick, slotOnClick ].filter( Boolean );
 
 				return (

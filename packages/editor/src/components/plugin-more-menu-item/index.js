@@ -1,6 +1,5 @@
 import { usePluginContext } from '@wordpress/plugins';
 import { ActionItem } from '@wordpress/interface';
-import MoreMenuItem from '../more-menu/more-menu-item';
 
 /**
  * Renders a menu item in `Plugins` group in `More Menu` drop down, and can be used to as a button or link depending on the props provided.
@@ -64,7 +63,6 @@ export default function PluginMoreMenuItem( props ) {
 	return (
 		<ActionItem
 			name="core/plugin-more-menu"
-			as={ props.as ?? MoreMenuItem }
 			icon={ props.icon || context.icon }
 			{ ...props }
 		/>

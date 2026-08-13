@@ -5,14 +5,14 @@ import { forwardRef } from '@wordpress/element';
 // eslint-disable-next-line @wordpress/use-recommended-components
 import { Menu } from '@wordpress/ui';
 import MoreMenuItem from '../more-menu-item';
-import PluginsMenuGroup from '../plugins-menu-group';
+import MoreMenuGroup from '../more-menu-group';
 
 function renderMenu( children ) {
 	return render(
 		<Menu.Root>
 			<Menu.Trigger>Options</Menu.Trigger>
 			<Menu.Popup>
-				<PluginsMenuGroup label="Panels">{ children }</PluginsMenuGroup>
+				<MoreMenuGroup label="Panels">{ children }</MoreMenuGroup>
 			</Menu.Popup>
 		</Menu.Root>
 	);
@@ -23,7 +23,7 @@ async function openMenu( user ) {
 	await screen.findByRole( 'menu' );
 }
 
-describe( 'PluginsMenuGroup', () => {
+describe( 'MoreMenuGroup', () => {
 	it( 'adopts legacy menu items as menu items', async () => {
 		const user = userEvent.setup();
 		const onClick = jest.fn();
@@ -66,28 +66,6 @@ describe( 'PluginsMenuGroup', () => {
 		expect(
 			screen.getByRole( 'menuitem', { name: 'Legacy link' } )
 		).toHaveAttribute( 'href', 'https://wordpress.org' );
-	} );
-
-	it( 'adopts the items of a fill wrapping them in a fragment', async () => {
-		const user = userEvent.setup();
-
-		renderMenu(
-			<>
-				<MenuItem>First item</MenuItem>
-				<MenuItem>Second item</MenuItem>
-			</>
-		);
-		await openMenu( user );
-
-		await user.keyboard( '{ArrowDown}' );
-		expect(
-			screen.getByRole( 'menuitem', { name: 'First item' } )
-		).toHaveFocus();
-
-		await user.keyboard( '{ArrowDown}' );
-		expect(
-			screen.getByRole( 'menuitem', { name: 'Second item' } )
-		).toHaveFocus();
 	} );
 
 	it( 'skips fills rendering nothing', async () => {
