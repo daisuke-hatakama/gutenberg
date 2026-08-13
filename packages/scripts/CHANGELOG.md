@@ -770,6 +770,12 @@
 -   Updated `check-node-version` to version `^4.1.0` that no longer processes unrelated engines with `check-engines` command ([#29066](https://github.com/WordPress/gutenberg/pull/29066)).
 -   Replace `jest-puppeteer` with the forked version of `jest-environment-puppeteer` to use `puppeteer-core` directly ([#29418](https://github.com/WordPress/gutenberg/pull/29418)).
 
+## 13.0.1 (2021-01-28)
+
+### Bug Fixes
+
+-   Prevent translation function names from being mangled to ensure stings are extracted ([#28231](https://github.com/WordPress/gutenberg/pull/28231)).
+
 ## 13.0.0 (2021-01-21)
 
 ### Breaking Changes
@@ -790,7 +796,6 @@
 ### Bug Fixes
 
 -   Ensure that `check-engines` uses the same default version of Node.js and npm as this package ([#28143](https://github.com/WordPress/gutenberg/pull/28143)).
--   Prevent translation function names from being mangled to ensure stings are extracted ([#28231](https://github.com/WordPress/gutenberg/pull/28231)).
 
 ### Internal
 
