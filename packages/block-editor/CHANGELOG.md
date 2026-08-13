@@ -544,11 +544,13 @@
 
 -   Add new `__experimentalEditorSkeleton` component. This has been moved over from the `@wordpress/edit-post` package, where it was an internal component called `EditorRegions`. Its class names have thus been renamed from `edit-post-editor-regions` to `block-editor-editor-skeleton`.
 
-## 3.3.0 (2019-11-14)
+## 3.4.0 (2019-12-19)
 
 ### New Features
 
 -   Added a `label` prop to `URLInput`. This allows the label to be set without needing to wrap the `URLInput` in a `BaseControl`.
+
+## 3.3.0 (2019-11-14)
 
 ### Deprecations
 
