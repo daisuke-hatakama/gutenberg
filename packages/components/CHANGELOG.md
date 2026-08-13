@@ -3370,6 +3370,10 @@
 -   Refactored the `ToggleGroupControl` component's structure and embedded `ToggleGroupControlButton` directly into `ToggleGroupControlOption` ([#35600](https://github.com/WordPress/gutenberg/pull/35600)).
 -   Added support for showing an experimental hint in `CustomSelectControl` ([#35673](https://github.com/WordPress/gutenberg/pull/35673)).
 
+### Internal
+
+-   Deleted the `useJumpStep` utility function ([#35561](https://github.com/WordPress/gutenberg/pull/35561)).
+
 ### Breaking Changes
 
 -   The `color` property a `tinycolor2` color object passed on `onChangeComplete` property of the `ColorPicker` component was removed. Please use the new `onChange` property that accepts a string color representation ([#35562](https://github.com/WordPress/gutenberg/pull/35562)).
@@ -3386,7 +3390,6 @@
 ### New Features
 
 -   Add an experimental `Navigator` components ([#34904](https://github.com/WordPress/gutenberg/pull/34904)) as a replacement for the previous `Navigation` related components.
--   Update the `ColorPicker` component to the latest design ([#35220](https://github.com/WordPress/gutenberg/pull/35220))
 
 ### Bug Fixes
 
@@ -3395,7 +3398,6 @@
 ### Internal
 
 -   Deleted the `createComponent` utility function ([#34929](https://github.com/WordPress/gutenberg/pull/34929)).
--   Deleted the `useJumpStep` utility function ([#35561](https://github.com/WordPress/gutenberg/pull/35561)).
 
 ## 17.0.0 (2021-09-09)
 
