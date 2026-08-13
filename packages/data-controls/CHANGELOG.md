@@ -248,16 +248,18 @@
 
 ## 1.21.0 (2021-03-17)
 
-## 1.18.0 (2020-10-06)
-
-### New Features
-
--   Expose the `syncSelect` control for synchronous calls of registry selectors
+## 1.19.0 (2020-10-20)
 
 ### Deprecations
 
 -   Deprecated the `syncSelect`, `select` and `dispatch` controls that are now part of
     `@wordpress/data` and built in by default in every data store.
+
+## 1.18.0 (2020-10-06)
+
+### New Features
+
+-   Expose the `syncSelect` control for synchronous calls of registry selectors
 
 ## 1.4.0 (2019-11-14)
 
