@@ -1,6 +1,6 @@
 import { forwardRef, useRef } from '@wordpress/element';
 import { useMergeRefs } from '@wordpress/compose';
-import { ControlWithError } from '../control-with-error';
+import { ControlWithError } from '@wordpress/ui';
 import type { ValidatedControlProps } from './types';
 import ToggleControl from '../../toggle-control';
 
@@ -20,6 +20,7 @@ const UnforwardedValidatedToggleControl = (
 
 	return (
 		<ControlWithError
+			className="components-validated-control"
 			required={ required }
 			markWhenOptional={ markWhenOptional }
 			customValidity={ customValidity }
