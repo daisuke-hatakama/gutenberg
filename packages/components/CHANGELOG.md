@@ -3625,6 +3625,9 @@
 
 ### New Features
 
+-   Added a new `render` property to `FormFileUpload` component. Allowing users of the component to custom the UI for their needs.
+-   Added a new `BaseControl.VisualLabel` component.
+-   Added a new `preview` prop to the `Placeholder` component which allows to display a preview, for example a media preview when the Placeholder is used in media editing contexts.
 -   Added a new `HorizontalRule` component.
 -   Added a new `Snackbar` component.
 
@@ -3632,23 +3635,17 @@
 
 -   Fixed display of reset button when using RangeControl `allowReset` prop.
 -   Fixed minutes field of `DateTimePicker` missed '0' before single digit values.
+-   Fix `instanceId` prop passed through to `Button` component via `MenuItems` producing React console error. Fixed by removing the unnecessary use of `withInstanceId` on the `MenuItems` component [#14599](https://github.com/WordPress/gutenberg/pull/14599)
 
 ## 7.3.0 (2019-04-16)
 
 ### New Features
 
--   Added a new `render` property to `FormFileUpload` component. Allowing users of the component to custom the UI for their needs.
--   Added a new `BaseControl.VisualLabel` component.
--   Added a new `preview` prop to the `Placeholder` component which allows to display a preview, for example a media preview when the Placeholder is used in media editing contexts.
 -   Added a new `anchorRect` prop to `Popover` which enables a developer to provide a custom `DOMRect` object at which to position the popover.
 
 ### Enhancements
 
 -   Limit `Base Control Label` to the width of its content.
-
-### Bug Fixes
-
--   Fix `instanceId` prop passed through to `Button` component via `MenuItems` producing React console error. Fixed by removing the unnecessary use of `withInstanceId` on the `MenuItems` component [#14599](https://github.com/WordPress/gutenberg/pull/14599)
 
 ## 7.2.0 (2019-03-20)
 

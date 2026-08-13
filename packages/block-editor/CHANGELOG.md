@@ -570,7 +570,7 @@
 
 -   Refactored `BlockSettingsMenu` to use `DropdownMenu` from `@wordpress/components`.
 
-## 2.0.0 (2019-04-16)
+## 2.1.0 (2019-05-21)
 
 ### New Features
 
@@ -582,6 +582,11 @@
 -   Added the usage of `mediaPreview` for the `Placeholder` component to the `MediaPlaceholder` component.
 -   Added a an `onDoubleClick` event handler to the `MediaPlaceholder` component.
 -   Added a way to pass special `ref` property to the `PlainText` component.
+
+## 2.0.0 (2019-04-16)
+
+### New Features
+
 -   The `URLPopover` component now passes through all unhandled props to the underlying Popover component.
 
 ### Breaking Changes
