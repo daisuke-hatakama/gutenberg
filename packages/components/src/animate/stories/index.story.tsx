@@ -86,6 +86,11 @@ Loading.args = {
 		</Notice>
 	),
 };
+Loading.parameters = {
+	// FIXME: Loading demo applies the opacity pulse to a Notice (and its text), which fails color-contrast mid-animation. Update the story to animate a non-text element instead of Notice.
+	// See: https://github.com/WordPress/gutenberg/issues/81596
+	a11y: { test: 'todo' },
+};
 
 export const SlideIn = Template.bind( {} );
 SlideIn.args = {
