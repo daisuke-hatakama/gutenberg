@@ -5,6 +5,7 @@
 ### New Features
 
 -   Add `Spinner` component ([#81358](https://github.com/WordPress/gutenberg/pull/81358)).
+-   Add `ControlWithError` component, ported from `@wordpress/components` and `@wordpress/dataviews` ([#81230](https://github.com/WordPress/gutenberg/issues/81230)).
 
 ## 0.20.0 (2026-08-12)
 
