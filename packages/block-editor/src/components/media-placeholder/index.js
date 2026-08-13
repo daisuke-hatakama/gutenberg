@@ -381,9 +381,11 @@ export function MediaPlaceholder( {
 						}
 					}
 					return (
+						types.length > 0 &&
 						types.every( ( type ) =>
 							allowedTypes.includes( type )
-						) && ( multiple ? true : types.length === 1 )
+						) &&
+						( multiple ? true : types.length === 1 )
 					);
 				} }
 			/>
