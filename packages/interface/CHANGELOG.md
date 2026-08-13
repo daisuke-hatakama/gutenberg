@@ -2,12 +2,23 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+-   `ActionItem`: `as` now defaults to `MenuItem` instead of `Button`, to nest in the `MenuGroup` that `ActionItem.Slot` renders by default ([#81507](https://github.com/WordPress/gutenberg/pull/81507)).
+
+### New Features
+
+-   `ActionItem.Slot`: Accept a `children` render prop receiving the fills as a flat array, for containers that wrap each fill ([#81507](https://github.com/WordPress/gutenberg/pull/81507)).
+
+### Internal
+
+-   `ActionItem.Slot`: Stop inspecting fills for `__unstableExplicitMenuItem` and `__unstableTarget`. `ComplementaryAreaMoreMenuItem` registers itself and `ComplementaryArea` leaves out the item it injects for the same area, so no duplicate is rendered ([#81507](https://github.com/WordPress/gutenberg/pull/81507)).
+
 ## 9.38.0 (2026-08-12)
 
 ### Enhancements
 
 -   `ComplementaryArea`: Add a `render` prop to replace the default container element with a given React element ([#81054](https://github.com/WordPress/gutenberg/pull/81054)).
--   `ComplementaryAreaMoreMenuItem`: Forward the ref to the underlying `MenuItem`, so that the item can be rendered by a menu that manages its own items.
 
 ### Bug Fixes
 

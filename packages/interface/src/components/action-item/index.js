@@ -1,13 +1,12 @@
-import { MenuGroup, Button, Slot, Fill } from '@wordpress/components';
+import { MenuGroup, MenuItem, Slot, Fill } from '@wordpress/components';
 import { Children } from '@wordpress/element';
-
-const noop = () => {};
 
 function ActionItemSlot( {
 	name,
 	as: Component = MenuGroup,
 	fillProps = {},
 	bubblesVirtually,
+	children,
 	...props
 } ) {
 	return (
@@ -17,56 +16,41 @@ function ActionItemSlot( {
 			fillProps={ fillProps }
 		>
 			{ ( fills ) => {
-				if ( ! Children.toArray( fills ).length ) {
+				// Each fill renders an array of its own, so flatten them into a
+				// single list before handing them over.
+				const items = Children.toArray( fills );
+
+				if ( ! items.length ) {
 					return null;
 				}
 
-				// Special handling exists for backward compatibility.
-				// It ensures that menu items created by plugin authors aren't
-				// duplicated with automatically injected menu items coming
-				// from pinnable plugin sidebars.
-				// @see https://github.com/WordPress/gutenberg/issues/14457
-				const initializedByPlugins = [];
-				Children.forEach(
-					fills,
-					( {
-						props: { __unstableExplicitMenuItem, __unstableTarget },
-					} ) => {
-						if ( __unstableTarget && __unstableExplicitMenuItem ) {
-							initializedByPlugins.push( __unstableTarget );
-						}
-					}
-				);
-				const children = Children.map( fills, ( child ) => {
-					if (
-						! child.props.__unstableExplicitMenuItem &&
-						initializedByPlugins.includes(
-							child.props.__unstableTarget
-						)
-					) {
-						return null;
-					}
-					return child;
-				} );
+				if ( typeof children === 'function' ) {
+					return children( items );
+				}
 
-				return <Component { ...props }>{ children }</Component>;
+				return <Component { ...props }>{ items }</Component>;
 			} }
 		</Slot>
 	);
 }
 
-function ActionItem( { name, as: Component = Button, onClick, ...props } ) {
+function ActionItem( { name, as: Component = MenuItem, onClick, ...props } ) {
 	return (
 		<Fill name={ name }>
-			{ ( { onClick: fpOnClick } ) => {
+			{ ( { onClick: slotOnClick } ) => {
+				// The slot passes a handler of its own through `fillProps`, for
+				// example to close the menu the item lives in. It runs
+				// alongside the item's `onClick`, not instead of it.
+				const handlers = [ onClick, slotOnClick ].filter( Boolean );
+
 				return (
 					<Component
 						onClick={
-							onClick || fpOnClick
-								? ( ...args ) => {
-										( onClick || noop )( ...args );
-										( fpOnClick || noop )( ...args );
-								  }
+							handlers.length
+								? ( ...args ) =>
+										handlers.forEach( ( handler ) =>
+											handler( ...args )
+										)
 								: undefined
 						}
 						{ ...props }
