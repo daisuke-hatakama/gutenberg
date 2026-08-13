@@ -499,11 +499,16 @@
 
 -   `wp-env destroy` now removes dangling docker volumes and networks associated with the WordPress environment.
 
-## 1.4.0 (2020-05-28)
+## 1.5.0 (2020-06-15)
 
 ### New Features
 
 -   Add support for running interactive commands. Examples: `wp-env run cli wp shell` and `wp-env run cli bash`.
+
+## 1.4.0 (2020-05-28)
+
+### New Features
+
 -   View php and WordPress log output with the new `wp-env logs` command.
 -   Clean up your local environment with the new `wp-env destroy` command.
 -   Expose Docker service for running phpunit commands.
