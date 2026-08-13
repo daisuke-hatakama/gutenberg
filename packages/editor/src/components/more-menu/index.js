@@ -132,24 +132,31 @@ export default function MoreMenu( { isRevisionMode = false } ) {
 				</ActionItem.Slot>
 				<Menu.Separator />
 				<Menu.Group>
-					<Menu.GroupLabel>{ __( 'Tools' ) }</Menu.GroupLabel>
-					<Menu.Item
-						onClick={ () =>
-							openModal( 'editor/keyboard-shortcut-help' )
-						}
-						shortcut={ KEYBOARD_SHORTCUTS_SHORTCUT }
-					>
-						{ __( 'Keyboard shortcuts' ) }
-					</Menu.Item>
+					<Menu.GroupLabel>{ __( 'More actions' ) }</Menu.GroupLabel>
+					<Menu.SubmenuRoot>
+						<Menu.SubmenuTrigger>
+							{ __( 'Help' ) }
+						</Menu.SubmenuTrigger>
+						<Menu.Popup>
+							<Menu.LinkItem
+								href={ __(
+									'https://wordpress.org/documentation/article/wordpress-block-editor/'
+								) }
+								openInNewTab
+							>
+								{ __( 'Documentation' ) }
+							</Menu.LinkItem>
+							<Menu.Item
+								onClick={ () =>
+									openModal( 'editor/keyboard-shortcut-help' )
+								}
+								shortcut={ KEYBOARD_SHORTCUTS_SHORTCUT }
+							>
+								{ __( 'Keyboard shortcuts' ) }
+							</Menu.Item>
+						</Menu.Popup>
+					</Menu.SubmenuRoot>
 					<CopyContentMenuItem />
-					<Menu.LinkItem
-						href={ __(
-							'https://wordpress.org/documentation/article/wordpress-block-editor/'
-						) }
-						openInNewTab
-					>
-						{ __( 'Help' ) }
-					</Menu.LinkItem>
 					<ToolsMoreMenuGroup.Slot />
 				</Menu.Group>
 				<Menu.Separator />
