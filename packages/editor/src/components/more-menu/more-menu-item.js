@@ -1,7 +1,6 @@
-import { Icon as WCIcon } from '@wordpress/components';
 import { forwardRef } from '@wordpress/element';
 // eslint-disable-next-line @wordpress/use-recommended-components
-import { Menu } from '@wordpress/ui';
+import { Icon, Menu } from '@wordpress/ui';
 
 function UnforwardedMoreMenuItem(
 	{
@@ -24,7 +23,7 @@ function UnforwardedMoreMenuItem(
 	) : (
 		children
 	);
-	const prefix = icon ? <WCIcon icon={ icon } size={ 24 } /> : undefined;
+	const prefix = icon ? <Icon icon={ icon } /> : undefined;
 
 	// Items toggling a sidebar of the plugins API describe themselves with the
 	// ARIA props of a checkable item.
