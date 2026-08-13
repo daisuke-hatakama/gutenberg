@@ -1640,6 +1640,7 @@
 
 ### Bug Fixes
 
+-   `Modal`: Add `box-sizing` reset style ([#58905](https://github.com/WordPress/gutenberg/pull/58905)).
 -   `ToolbarButton`: Center text for short labels ([#59117](https://github.com/WordPress/gutenberg/pull/59117)).
 
 ### Internal
@@ -1652,18 +1653,14 @@
 
 ### Experimental
 
+-   `CustomSelectControlV2`: Adapt component for legacy usage ([#57902](https://github.com/WordPress/gutenberg/pull/57902)).
 -   `Tabs`: rename `initialTabId` prop to `defaultTabId` ([#59035](https://github.com/WordPress/gutenberg/pull/59035)).
 
 ## 26.0.1 (2024-02-13)
 
 ### Bug Fixes
 
--   `Modal`: Add `box-sizing` reset style ([#58905](https://github.com/WordPress/gutenberg/pull/58905)).
 -   `Popover`: Fix positioning in nested iframes by upgrading Floating UI packages to their latest versions ([#58932](https://github.com/WordPress/gutenberg/pull/58932)).
-
-### Experimental
-
--   `CustomSelectControlV2`: Adapt component for legacy usage ([#57902](https://github.com/WordPress/gutenberg/pull/57902)).
 
 ## 26.0.0 (2024-02-09)
 
