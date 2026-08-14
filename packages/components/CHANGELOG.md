@@ -3287,11 +3287,11 @@
 -   Updated `ToolsPanel` header icon to only show "plus" icon when all items are optional and all are currently hidden ([#38262](https://github.com/WordPress/gutenberg/pull/38262))
 -   `TreeGrid`: Fix keyboard navigation for expand/collapse table rows in Firefox ([#37983](https://github.com/WordPress/gutenberg/pull/37983))
 -   Wrapped `Modal` in a `forwardRef` call ([#36831](https://github.com/WordPress/gutenberg/pull/36831)).
--   Refactor `DateTime` class component to functional component ([#36835](https://github.com/WordPress/gutenberg/pull/36835))
+-   Refactor `DatePicker` from a class component to a function component ([#36835](https://github.com/WordPress/gutenberg/pull/36835)).
 -   Unify styles for `ColorIndicator` with how they appear in Global Styles ([#37028](https://github.com/WordPress/gutenberg/pull/37028))
 -   Add support for rendering the `ColorPalette` in a `Dropdown` when opened in the sidebar ([#37067](https://github.com/WordPress/gutenberg/pull/37067))
 -   Add support for proper borders to color indicators ([#37500](https://github.com/WordPress/gutenberg/pull/37500))
--   Refactor `SuggestionsList` class component to functional component([#36924](https://github.com/WordPress/gutenberg/pull/36924/))
+-   Refactor `SuggestionsList` from a class component to a function component ([#36924](https://github.com/WordPress/gutenberg/pull/36924)).
 
 ### Bug Fixes
 
@@ -3350,7 +3350,7 @@
 
 ### Enhancements
 
--   Show an incremental sequence of numbers (1/2/3/4/5) as a label of the font size, when we have at most five font sizes, where at least one the them contains a complex css value(clamp, var, etc..). We do this because complex css values cannot be calculated properly and the incremental sequence of numbers as labels can help the user better mentally map the different available font sizes. ([#37038](https://github.com/WordPress/gutenberg/pull/37038))
+-   Show an incremental sequence of numbers (1/2/3/4/5) as font-size labels when there are at most five font sizes and at least one contains a complex CSS value (`clamp`, `var`, etc.). Complex CSS values cannot be calculated reliably, so the sequence helps users map the available sizes. ([#37038](https://github.com/WordPress/gutenberg/pull/37038))
 
 ## 19.1.4 (2021-12-13)
 
@@ -3360,7 +3360,7 @@
 
 ### Experimental
 
--   Add `__experimentalIsRenderedInSidebar` property to the `GradientPicker`and `CustomGradientPicker`. The property changes the color popover behavior to have a special placement behavior appropriate for sidebar UI's ([#37115](https://github.com/WordPress/gutenberg/pull/37115)).
+-   Add the `__experimentalIsRenderedInSidebar` prop to `GradientPicker` and `CustomGradientPicker` to position color popovers appropriately in sidebar UIs ([#37115](https://github.com/WordPress/gutenberg/pull/37115)).
 
 ## 19.1.3 (2021-12-06)
 
