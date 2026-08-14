@@ -375,12 +375,17 @@
 
 -   Revert the removal of the automatic environment detection of `test-unit` and `test-e2e` for the `recommended` preset. However, They will still be disabled if `@playwright/test` is installed in the project.
 
+## 11.1.0 (2022-03-23)
+
+### Breaking Changes
+
+-   Remove automatic environment detection of `test-unit` and `test-e2e` for the `recommended` preset. It's now recommended to opt-in to specific preset explicitly ([#38570](https://github.com/WordPress/gutenberg/pull/38570)).
+
 ## 11.0.0 (2022-03-11)
 
 ### Breaking Changes
 
 -   The integration with [Prettier](https://prettier.io) is now optional and gets activated when the `prettier` package is installed in the project ([#39244](https://github.com/WordPress/gutenberg/pull/39244)).
--   Remove automatic environment detection of `test-unit` and `test-e2e` for the `recommended` preset. It's now recommended to opt-in to specific preset explicitly.
 
 ## 10.0.2 (2022-02-23)
 
