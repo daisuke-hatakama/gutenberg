@@ -3369,6 +3369,7 @@
 ### New Features
 
 -   Added support for `step="any"` in `NumberControl` and `RangeControl` ([#34542](https://github.com/WordPress/gutenberg/pull/34542)).
+-   Update the `ColorPicker` component to the latest design ([#35220](https://github.com/WordPress/gutenberg/pull/35220)).
 
 ### Enhancements
 
