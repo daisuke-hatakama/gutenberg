@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Bug Fixes
+
+-   `Notice`: Fix a crash when a child using hooks is conditionally rendered ([#81640](https://github.com/WordPress/gutenberg/pull/81640)).
+
 ### Internal
 
 -   Point tsconfig references at split dependencies' build projects. ([#81509](https://github.com/WordPress/gutenberg/pull/81509))
