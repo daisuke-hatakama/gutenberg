@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Internal
+
+-   `URLInput`: Compose validation with `ControlWithError` from `@wordpress/ui` instead of unlocking `ValidatedInputControl` from the `@wordpress/components` private APIs ([#81230](https://github.com/WordPress/gutenberg/issues/81230)).
+
 ### Bug Fixes
 
 -   `DimensionsTool`: Reflect aspect ratio and scale values that are updated from outside the component, such as by undo or `updateBlockAttributes`. The scale control no longer displays a stale value, and an aspect ratio that is written differently to its preset, e.g. `1/1` rather than `1`, is displayed as that preset instead of as "Original" ([#80747](https://github.com/WordPress/gutenberg/pull/80747)).
