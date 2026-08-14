@@ -253,13 +253,13 @@
 ### Deprecations
 
 -   Deprecated the `syncSelect`, `select` and `dispatch` controls that are now part of
-    `@wordpress/data` and built in by default in every data store.
+    `@wordpress/data` and built in by default in every data store ([#25362](https://github.com/WordPress/gutenberg/pull/25362)).
 
 ## 1.18.0 (2020-10-06)
 
 ### New Features
 
--   Expose the `syncSelect` control for synchronous calls of registry selectors
+-   Expose the `syncSelect` control for synchronous calls of registry selectors ([#25336](https://github.com/WordPress/gutenberg/pull/25336)).
 
 ## 1.4.0 (2019-11-14)
 
