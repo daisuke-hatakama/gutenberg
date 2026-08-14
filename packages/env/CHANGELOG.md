@@ -503,7 +503,7 @@
 
 ### New Features
 
--   Add support for running interactive commands. Examples: `wp-env run cli wp shell` and `wp-env run cli bash`.
+-   Add support for running interactive commands. Examples: `wp-env run cli wp shell` and `wp-env run cli bash` ([#22611](https://github.com/WordPress/gutenberg/pull/22611)).
 
 ## 1.4.0 (2020-05-28)
 

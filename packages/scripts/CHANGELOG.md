@@ -859,7 +859,7 @@
 ### New Features
 
 -   The PostCSS loader now gives preference to a `postcss.config.js` configuration file if present.
--   The `test-e2e` and `test-unit` scripts will now disambiguate custom configurations, preferring a `jest-e2e.config.js`, `jest-e2e.config.json`, `jest-unit.config.js`, or `jest-unit.config.json` Jest configuration file if present, falling back to `jest.config.js` or `jest.config.json`. This allows for configurations which should only apply to one or the other test variant.
+-   The `test-e2e` and `test-unit` scripts will now disambiguate custom configurations, preferring a `jest-e2e.config.js` or `jest-unit.config.js` Jest configuration file if present, falling back to `jest.config.js` or `jest.config.json`. This allows for configurations which should only apply to one or the other test variant ([#22477](https://github.com/WordPress/gutenberg/pull/22477)).
 
 ### Bug Fixes
 
