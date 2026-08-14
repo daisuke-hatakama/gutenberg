@@ -585,14 +585,14 @@
 
 ### New Features
 
--   Added the `addToGallery` property to the `MediaUpload` interface. The property allows users to open the media modal in the `gallery-library`instead of `gallery-edit` state.
--   Added the `addToGallery` property to the `MediaPlaceholder` component. The component passes the property to the `MediaUpload` component used inside the placeholder.
--   Added the `isAppender` property to the `MediaPlaceholder` component. The property changes the look of the placeholder to be adequate to scenarios where new files are added to an already existing set of files, e.g., adding files to a gallery.
--   Added the `dropZoneUIOnly` property to the `MediaPlaceholder` component. The property makes the `MediaPlaceholder` only render a dropzone without any other additional UI.
--   Added a cancel link to the list of buttons in the `MediaPlaceholder` component which appears if an `onCancel` handler exists.
--   Added the usage of `mediaPreview` for the `Placeholder` component to the `MediaPlaceholder` component.
--   Added a an `onDoubleClick` event handler to the `MediaPlaceholder` component.
--   Added a way to pass special `ref` property to the `PlainText` component.
+-   Added the `addToGallery` prop to the `MediaUpload` interface, which opens the media modal in the `gallery-library` state instead of the `gallery-edit` state ([#12367](https://github.com/WordPress/gutenberg/pull/12367)).
+-   Added the `addToGallery` prop to `MediaPlaceholder`, which passes it to `MediaUpload` ([#12367](https://github.com/WordPress/gutenberg/pull/12367)).
+-   Added the `isAppender` prop to `MediaPlaceholder`, which adapts the placeholder UI for adding files to an existing set ([#12367](https://github.com/WordPress/gutenberg/pull/12367)).
+-   Added the `dropZoneUIOnly` prop to `MediaPlaceholder`, which renders only the drop zone ([#12367](https://github.com/WordPress/gutenberg/pull/12367)).
+-   Added a cancel link to `MediaPlaceholder` when an `onCancel` handler is provided ([#14142](https://github.com/WordPress/gutenberg/pull/14142)).
+-   Added a `mediaPreview` prop to `MediaPlaceholder`, which passes its value to `Placeholder` as the `preview` prop ([#14142](https://github.com/WordPress/gutenberg/pull/14142)).
+-   Added an `onDoubleClick` prop to `MediaPlaceholder` ([#14142](https://github.com/WordPress/gutenberg/pull/14142)).
+-   Added `ref` forwarding to `PlainText` ([#14866](https://github.com/WordPress/gutenberg/pull/14866)).
 
 ## 2.0.0 (2019-04-16)
 

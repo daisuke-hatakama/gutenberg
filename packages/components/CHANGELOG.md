@@ -3614,6 +3614,12 @@
 -   `isDefault` prop in `Button` has been deprecated. Consider using `isSecondary` instead.
 -   `IconButton` has been deprecated. Use the `Button` component instead.
 
+## 8.3.0 (2019-09-16)
+
+### Enhancements
+
+-   Limited `BaseControl` labels to the width of their content ([#14478](https://github.com/WordPress/gutenberg/pull/14478)).
+
 ## 8.2.0 (2019-08-29)
 
 ### New Features
@@ -3655,6 +3661,7 @@
 
 -   Add new `BlockQuotation` block to the primitives folder to support blockquote in a multiplatform way. [#15482](https://github.com/WordPress/gutenberg/pull/15482).
 -   `DropdownMenu` now supports passing a [render prop](https://reactjs.org/docs/render-props.html#using-props-other-than-render) as children for more advanced customization.
+-   Added a new `Snackbar` component ([#15594](https://github.com/WordPress/gutenberg/pull/15594)).
 
 ### Internal
 
@@ -3671,32 +3678,27 @@
 ### Bug Fixes
 
 -   Although `DateTimePicker` does not allow picking the seconds, passed the current seconds as the selected value for seconds when calling `onChange`. Now it passes zero.
+-   Fixed the `DateTimePicker` minutes field omitting a leading zero for single-digit values ([#15736](https://github.com/WordPress/gutenberg/pull/15736)).
 
 ## 7.4.0 (2019-05-21)
 
 ### New Features
 
--   Added a new `render` property to `FormFileUpload` component. Allowing users of the component to custom the UI for their needs.
--   Added a new `BaseControl.VisualLabel` component.
--   Added a new `preview` prop to the `Placeholder` component which allows to display a preview, for example a media preview when the Placeholder is used in media editing contexts.
+-   Added a `render` prop to `FormFileUpload` for custom rendering ([#12367](https://github.com/WordPress/gutenberg/pull/12367)).
+-   Added the `BaseControl.VisualLabel` component ([#14179](https://github.com/WordPress/gutenberg/pull/14179)).
+-   Added a `preview` prop to `Placeholder` for rendering previews, such as media previews in media-editing contexts ([#14142](https://github.com/WordPress/gutenberg/pull/14142)).
 -   Added a new `HorizontalRule` component.
--   Added a new `Snackbar` component.
 
 ### Bug Fixes
 
 -   Fixed display of reset button when using RangeControl `allowReset` prop.
--   Fixed minutes field of `DateTimePicker` missed '0' before single digit values.
--   Fix `instanceId` prop passed through to `Button` component via `MenuItems` producing React console error. Fixed by removing the unnecessary use of `withInstanceId` on the `MenuItems` component [#14599](https://github.com/WordPress/gutenberg/pull/14599)
+-   Fixed `instanceId` being passed through to `Button` by removing the unnecessary `withInstanceId` wrapper from `MenuItem` ([#14599](https://github.com/WordPress/gutenberg/pull/14599)).
 
 ## 7.3.0 (2019-04-16)
 
 ### New Features
 
 -   Added a new `anchorRect` prop to `Popover` which enables a developer to provide a custom `DOMRect` object at which to position the popover.
-
-### Enhancements
-
--   Limit `Base Control Label` to the width of its content.
 
 ## 7.2.0 (2019-03-20)
 
