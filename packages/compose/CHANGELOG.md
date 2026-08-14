@@ -35,11 +35,11 @@
 
 ### Bug Fixes
 
--   `useMediaQuery`, `useViewportMatch`: Resolve the `view` default lazily so the hooks no longer throw `ReferenceError: window is not defined` during server-side rendering. Regression from [#76446](https://github.com/WordPress/gutenberg/pull/76446).
+-   `useMediaQuery`, `useViewportMatch`: Resolve the `view` default lazily so the hooks no longer throw `ReferenceError: window is not defined` during server-side rendering ([#78725](https://github.com/WordPress/gutenberg/pull/78725)). Regression from [#76446](https://github.com/WordPress/gutenberg/pull/76446).
 
 ### Deprecations
 
--   The `pure` HoC now logs a runtime deprecation warning. Use `memo` or `PureComponent` from `@wordpress/element` instead.
+-   The `pure` HoC now logs a runtime deprecation warning. Use `memo` or `PureComponent` from `@wordpress/element` instead ([#78674](https://github.com/WordPress/gutenberg/pull/78674)).
 
 ### Code Quality
 
