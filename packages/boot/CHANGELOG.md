@@ -4,7 +4,7 @@
 
 ### Enhancements
 
--   Keep the editor's device preview in step with a `viewport` search param, so an entity that asks to be edited at a particular width — a navigation overlay meant for mobile — opens there and restores the previous width on the way back ([#PRNUM](https://github.com/WordPress/gutenberg/pull/PRNUM)).
+-   Keep the editor's device preview in step with a `viewport` search param, so an entity that asks to be edited at a particular width — a navigation overlay meant for mobile — opens there and restores the previous width on the way back ([#81617](https://github.com/WordPress/gutenberg/pull/81617)).
 
 ### Enhancements
 
