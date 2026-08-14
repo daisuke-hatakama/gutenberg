@@ -13,6 +13,7 @@
 -   DataForm: Internalize `ValidatedToggleGroupControl` instead of unlocking it from the `@wordpress/components` private APIs. [#81450](https://github.com/WordPress/gutenberg/pull/81450)
 -   DataForm: Remove the vendored `ControlWithError` copy in favor of the `ControlWithError` component from `@wordpress/ui`. [#81230](https://github.com/WordPress/gutenberg/issues/81230)
 -   DataForm: Render the `date` control's validity message with `ValidityIndicator` from `@wordpress/ui` instead of hand-rolled markup styled by `@wordpress/components` global class names. [#81230](https://github.com/WordPress/gutenberg/issues/81230)
+-   DataForm: Use `ValidatedInputControl` from `@wordpress/ui` in the `text`, `email`, `telephone`, `url`, `password`, `color`, `datetime`, and `time` controls, instead of unlocking it from the `@wordpress/components` private APIs. Prefixes and suffixes now render in an `InputLayout.Slot` from `@wordpress/ui`. [#81230](https://github.com/WordPress/gutenberg/issues/81230)
 
 ## 18.0.0 (2026-08-12)
 
