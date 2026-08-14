@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Enhancements
+
+-   Explain what templates are in the Templates sidebar description. ([#60304](https://github.com/WordPress/gutenberg/issues/60304))
+
 ### Internal
 
 -   Stop rendering `EditorKeyboardShortcutsRegister`, which the editor provider now renders itself ([#81580](https://github.com/WordPress/gutenberg/pull/81580)).
