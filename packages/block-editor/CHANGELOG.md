@@ -557,7 +557,7 @@
 
 ### New Features
 
--   Added a `label` prop to `URLInput`. This allows the label to be set without needing to wrap the `URLInput` in a `BaseControl`.
+-   Added a `label` prop to `URLInput`. This allows the label to be set without needing to wrap the `URLInput` in a `BaseControl` ([#15669](https://github.com/WordPress/gutenberg/pull/15669)).
 
 ## 3.3.0 (2019-11-14)
 
