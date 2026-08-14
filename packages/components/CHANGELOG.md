@@ -2095,7 +2095,6 @@
 ### Enhancements
 
 -   `RangeControl`: Add `__next40pxDefaultSize` prop to opt into the new 40px default size ([#49105](https://github.com/WordPress/gutenberg/pull/49105)).
--   `Guide`: Don't show Close button when there is only one page, and use default button and accent/theme styling ([#52014](https://github.com/WordPress/gutenberg/pull/52014)).
 
 ### Bug Fixes
 
@@ -2125,6 +2124,12 @@
 ### Documentation
 
 -   `SearchControl`: Improve documentation around usage of `label` prop ([#51781](https://github.com/WordPress/gutenberg/pull/51781)).
+
+## 25.1.4 (2023-07-03)
+
+### Enhancements
+
+-   `Guide`: Don't show Close button when there is only one page, and use default button and accent/theme styling ([#52014](https://github.com/WordPress/gutenberg/pull/52014)).
 
 ## 25.1.3 (2023-06-28)
 
