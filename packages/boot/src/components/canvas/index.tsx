@@ -8,6 +8,7 @@ import BootBackButton from './back-button';
 import useNavigateToEntityRecord, {
 	useActionPerformed,
 } from './use-navigate-to-entity-record';
+import useViewportSync from './use-viewport-sync';
 
 interface CanvasProps {
 	canvas: CanvasData;
@@ -26,6 +27,8 @@ export default function Canvas( { canvas }: CanvasProps ) {
 	const { onNavigateToEntityRecord, onNavigateToPreviousEntityRecord } =
 		useNavigateToEntityRecord();
 	const onActionPerformed = useActionPerformed( canvas.postType );
+
+	useViewportSync();
 
 	// Where clicking a previewed canvas goes, resolved the same way the editor
 	// resolves anywhere else it sends you to edit an entity.
