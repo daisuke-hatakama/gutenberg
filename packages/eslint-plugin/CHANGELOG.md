@@ -380,14 +380,13 @@
 ### Breaking Changes
 
 -   The integration with [Prettier](https://prettier.io) is now optional and gets activated when the `prettier` package is installed in the project ([#39244](https://github.com/WordPress/gutenberg/pull/39244)).
+-   Remove automatic environment detection of `test-unit` and `test-e2e` for the `recommended` preset. It's now recommended to opt-in to specific preset explicitly.
+
+## 10.0.2 (2022-02-23)
 
 ### Bug Fixes
 
 -   Replaced no-shadow eslint rule with @typescript-eslint/no-shadow ([#38665](https://github.com/WordPress/gutenberg/pull/38665)).
-
-### Breaking Changes
-
--   Remove automatic environment detection of `test-unit` and `test-e2e` for the `recommended` preset. It's now recommended to opt-in to specific preset explicitly.
 
 ## 10.0.0 (2022-01-27)
 
