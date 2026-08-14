@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Internal
+
+-   `MediaEdit`: Render the validity message with `ValidityIndicator` from `@wordpress/ui` instead of hand-rolled markup styled by `@wordpress/components` global class names. The valid state now shows the success icon rather than the error icon. [#81230](https://github.com/WordPress/gutenberg/issues/81230)
+
 ## 0.45.0 (2026-08-12)
 
 ### Bug Fixes
