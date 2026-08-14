@@ -32,6 +32,7 @@ const ALLOWLIST = {
 			'Tabs',
 			'Text',
 			'Tooltip',
+			'ValidityIndicator',
 			'VisuallyHidden',
 		],
 		message:
