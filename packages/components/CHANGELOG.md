@@ -725,7 +725,7 @@
 
 ### Bug Fixes
 
--   `FocalPointPicker`: Fix SVG display when it doesn't provide a width attribute ([#70061](https://github.com/WordPress/gutenberg/pull/70061))..
+-   `FocalPointPicker`: Fix SVG display when it doesn't provide a width attribute ([#70061](https://github.com/WordPress/gutenberg/pull/70061)).
 -   `FormTokenField`: Fix filtering with full-width string ([#70232](https://github.com/WordPress/gutenberg/pull/70232)).
 
 ### Internal
