@@ -1,0 +1,1 @@
+import{n as r}from"./rolldown-runtime-DiifJuVD.js";import{t}from"./jsx-runtime-D57Iaoca.js";import{a as s,o as i,r as o}from"./svg-Cku9Dz8B.js";var n,e;function init_reset(){return(init_reset=r(()=>{i(),n=t(),e=(0,n.jsx)(s,{xmlns:"http://www.w3.org/2000/svg",viewBox:"0 0 24 24",fill:"currentColor",children:(0,n.jsx)(o,{d:"M7 11.5h10V13H7z"})})}))()}export{e as n,init_reset as t};

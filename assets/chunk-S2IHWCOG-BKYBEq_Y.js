@@ -1,0 +1,1 @@
+import{n}from"./rolldown-runtime-DiifJuVD.js";var r,t;function init_chunk_S2IHWCOG(){return(init_chunk_S2IHWCOG=n(()=>{r=(n,r)=>{let t=n.replace(/\s+/g,"-");return r?`control-${r}-${t}`:`control-${t}`},t=(n,r)=>{let t=n.replace(/\s+/g,"-");return r?`set-${r}-${t}`:`set-${t}`}}))()}export{t as n,init_chunk_S2IHWCOG as r,r as t};

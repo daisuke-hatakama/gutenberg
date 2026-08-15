@@ -1,0 +1,1 @@
+import{n as o,o as t}from"./rolldown-runtime-DiifJuVD.js";import{t as i}from"./react-BoNh7UIS.js";import{d as a,f as r,m as n,p as s}from"./DialogTitle-C965cxgO.js";function DialogRoot(o){const t=l.useContext(s)?"drawer":"dialog";return r(o,t)}var l;function init_DialogRoot(){return(init_DialogRoot=o(()=>{l=t(i(),1),n(),a()}))()}export{init_DialogRoot as n,DialogRoot as t};

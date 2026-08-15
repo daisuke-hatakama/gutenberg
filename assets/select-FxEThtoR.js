@@ -1,0 +1,1 @@
+import{n as t}from"./rolldown-runtime-DiifJuVD.js";import{n as e,t as n}from"./default-registry-BBTFPB4Y.js";function select(t){return n.select(t)}function init_select(){return(init_select=t(()=>{e()}))()}export{select as n,init_select as t};
